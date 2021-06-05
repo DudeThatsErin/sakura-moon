@@ -1,297 +1,444 @@
 const fs = require('fs');
 const Discord = require('discord.js');
-const client = new Discord.Client();
+const SHClient = require('shandler');
+const { Client, Intents } = require('discord.js');
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 client.commands = new Discord.Collection();
 const config = require('./config.json');
 const GhostPing = require('discord.js-ghost-ping');
 client.cooldowns = new Discord.Collection();
 const { cooldowns } = client;
 let connection;
-client.guildCommandPrefixes = new Discord.Collection();
 
-function readFilesFromPath(pathString) {
-  const directoryEntries = fs.readdirSync(pathString, {withFileTypes: true});
-
-  return directoryEntries.reduce((filteredEntries, dirEnt) => {
-      if (dirEnt.isDirectory()) {
-          // If the entry is a directory, call this function again
-          // but now add the directory name to the path string.
-          filteredEntries.push(...readFilesFromPath(`${pathString}/${dirEnt.name}`))
-      } else if (dirEnt.isFile()) {
-          // Check if the entry is a file instead. And if so, check
-          // if the file name ends with `.js`.
-          if (dirEnt.name.endsWith('.js')) {
-              // Add the file to the command file array.
-              filteredEntries.push(`${pathString}/${dirEnt.name}`);
-          }
-      }
-
-      return filteredEntries;
-  }, []);
+const options = {
+  commandsDir: 'commands', // commands folder path (required)
+  showLogs: 'extra', // "extra"|"normal"|null (default: "extra")
+  wrapper: false, // defaults to false
+  cLogs: true, // logs most of the resolved promises
+  autoDelete: true, // Automatically syncs the global application commands
+  autoRegister: true // Automatically register commands
 }
 
-// Call the read files function with the root folder of the commands and
-// store all the file paths in the constant.
-const commandFilePaths = readFilesFromPath('./commands');
+const handler = new SHClient(client, options);
 
-// Loop over the array of file paths and set the command on the client.
-commandFilePaths.forEach((filePath) => {
-  const command = require(filePath);
-
-  client.commands.set(command.name, command);
-});
+const commands = [
+  {
+    name: 'ping',
+    description: 'Advises how long I have been online and checks to make sure I can receive commands successfully.',
+  },
+  {
+    name: 'help',
+    description: 'Allows you to see all of my commands. Slash and otherwise.',
+  },
+  {
+    name: 'user-info',
+    description: 'Allows you to see information about yourself or other users.',
+    options:[
+      {
+          name:'user',
+          description:'Who\'s avatar do you want to see? If you don\'t ping anyone, you will get a link to your own avatar.',
+          type: 6,
+          required: false
+      }
+    ]
+  },
+  {
+    name: 'server-info',
+    description: 'Allows you to see information about this server.',
+  },
+  {
+    name: 'bot-info',
+    description: 'Provides information about Sakura Moon to users.',
+  },
+  {
+    name: 'avatar',
+    description: 'I will provide links to your avatar or whomever you ping\'s avatar.',
+    options:[
+      {
+          name:'user',
+          description:'Who\'s avatar do you want to see? If you don\'t ping anyone, you will get a link to your own avatar.',
+          type: 6,
+          required: false
+      }
+    ]
+  },
+  {
+    name: 'prune',
+    description: 'Allows **mods** to mass delete messages in a channel.',
+    options:[
+      {
+          name:'number of messages',
+          description:'How many messages should I prune?',
+          type: 4,
+          required: true
+      }
+  ]
+  },
+]
+const guilds = ['849645937202036757', '821170440571322389'] //for guild specific commands pass an array for guildIDs. If none, will default to global command
 
 console.log('----- LOGGING IN -----')
 client.on('ready', () => {
   console.log(`${client.user.tag} is logged in and ready!`);
-  console.log('----- I AM IN THESE GUILDS -----');
-  let guilds = client.guilds.cache.map(guild => `${guild.name} | ${guild.id}\n`).join("");
-  console.log(guilds.toString());
   console.log('----- LOGS BELOW -----');  
-      //prefixes
-      client.guilds.cache.forEach(guild => {
-        connection.query(
-          `SELECT prefix FROM Guilds WHERE guildId = ?;`,
-          [guild.id]
-        ).then(result => {
-          client.guildCommandPrefixes.set(guild.id, result[0][0].prefix);
-        }).catch(err => console.log(err));
+
+  client.user.setPresence({status: 'dnd', activities: [{ name: 'the server. Run !help to see all of my commands.', type: 'LISTENING' }] });
+
+    //prefixes
+    client.guilds.cache.forEach(guild => {
+      connection.query(
+        `SELECT prefix FROM Guilds WHERE guildId = ?;`,
+        [guild.id]
+      ).then(result => {
+        client.guildCommandPrefixes.set(guild.id, result[0][0].prefix);
       });
+    }).catch(err => console.log(err));
 
-  client.user.setPresence({
-    status: "online", 
-    activity: {
-        name: `the server. Run s.help to see my commands.`,  
-        type: "LISTENING" 
-    }
-  });
-  
+    handler.create(commands, guilds);
 });
 
-client.on('guildCreate', async (guild) => {
-  try {
-    await connection.query(
-      `INSERT INTO Guilds (guildId, guildName, ownerID, region, auditLog, prefix, modmail, modlog, thanks) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-      [guild.id, guild.name, guild.ownerID, guild.region, 'off', 's.', 'off', 'off', 'off']
-    );
-  } catch(err) {
-    console.log(err);
-  }
+handler.on('interaction', async interaction => {
+	console.log(interaction);
 });
-
 
 client.on('message', async message => {
   if (message.author.bot) return;
-  /* ------------------------------------------
-  MODMAIL
-  ---------------------------------------------
-  */
- const mainGuild = client.guilds.cache.get('821170440571322389'); // may not need.
- if(message.channel.type === "dm"){ // if in DM for bot.
-   if(message.author.bot) return;
-   if(message.content.includes("@everyone") || message.content.includes("@here")) return message.author.send('I\'m sorry, but you can not use everyone/here mentions in a modmail  thread.');
-   // is there a way I can exclude prefix commands? as in if someone runs s.ping in DMs, can I send a message telling them DMs are only for the modmail system regardless of whether it is on or off?
-   
-   const modmail = await connection.query(
-     `SELECT * FROM Guilds;`
-   );
-   const embed1 = new Discord.MessageEmbed()
-     .setColor('#C87AD5')
-     .setTitle('Which server should we open this modmail with?')
-     .setDescription('We have received your message and want to open a modmail for you but we aren\'t sure which server we should open the modmail with. Please respond with the corresponding number below to select a server to open a modmail with. For example, respond with 1 to open a modmail with Sakura Moon.')
+  if (message.channel.type === 'dm') return;
 
-   for (const row of modmail[0]){
-     const guilds = row.guildId;
-     const guildName = row.guildName;
-     const guildNo = row.serverNo;
-     embed1.addField(`${guildNo}. ${guildName}`, `Create a new ticket.\nServer ID:\n\`${guilds}\``, true); // need to figure out how to only display servers both the bot and the user are in. Doing this will limit the number of embeds I need. Hopefully I won't need pagination.
-   }
-   message.author.send(embed1);
-   console.log(message.content);
-   // I think I need an if statement to grab the response to the bot. I also think I need to await the response... I'm just not sure how to do this... Reactions could be better but I'm not sure how that would work.
-   //console.log(guilds);  need to figure out how to get this to be defined.
-
-   /* this is all temporary... I am going off of this bot: https://github.com/Cyanic76/discord-modmail/blob/master/bot.js and adapting it to my own. I wrote this before I realized I need to get the above working first. 
-   const modmail1 = await connection.query(
-     `SELECT userId FROM Tickets WHERE guildId = ?;`,
-     [message.guild.id]
-   ); // current modmails
-   let active = `support_${modmail1[0][0].userId}`;
-   let channel, found = true;
-   const modmail2 = await connection.query(
-     `SELECT userId FROM Blacklist WHERE guildId = ?;`,
-     [message.guild.id]
-   );
-   let blacklistedUser = modmail2[0][0].userId;
-   if(blacklistedUser !== null || blacklistedUser !== undefined) {
-     message.react("❌");
-     message.author.send("You are blacklisted from opening modmails. Any DMs you send me just go into the void. If you believe this is wrong, please report this.");
-     return;
-   }
-   if(active === null) {
-     active = {};
-     let everyone = guild.roles.cache.get(guild.roles.everyone.id);
-     let bot = guild.roles.cache.get(); // why do I need this?
-     await connection.query(
-       `INSERT INTO Tickets (guildId, userId) VALUES (?, ?);`,
-       [guild, message.author.id]
-     );
-     const modmail3 = await connection.query(
-       `SELECT * FROM Guilds WHERE guildId = ?;`,
-       [guild]
-     );
-     let modmailCat = modmail3[0][0].modmail;
-     let modmailLog = modmail3[0][0].log;
-     let modMod = modmail3[0][0].modMod;
-     const modmail4 = await connection.query(
-       `SELECT ticketNo FROM Tickets WHERE guildId = ?;`,
-       [guild]
-     );
-     let ticketNo = modmail4[0][0].ticketNo;
-     let channel = await guild.channels.create(`${message.author.username}-${message.author.discriminator}`,
-     {
-       type: 'text',
-       reason: `New modmail thread.`
-     })
-   }
-   */
- } else { // if not in DM.
   /* -----------------------------------------
   THANKS
   --------------------------------------------
   */
   const results3 = await connection.query(
-    `SELECT thanks FROM Guilds WHERE guildId = ?;`,
-    [message.guild.id]
-  );
-  const th = results3[0][0].thanks;
-  if(th === 'on') { // if thanks is on
-    //prefixes
-  const prefix = client.guildCommandPrefixes.get(message.guild.id);
-    const thnks = [ 'thanks', 'thnx', 'thank',  'tnx',  'ty', 'Thanks', 'Thank', 'thx'];
-    const isthanks = thnks.reduce((alrdyGood, curr) => alrdyGood || message.content.toLowerCase().split(' ').includes(curr), false);
-    if(isthanks && !message.content.startsWith(config.client.prefix)) {
-      message.reply(`It seems like someone\'s problem was resolved! I\'m glad someone was able to help you! Please use the \`s.thanks <@username or ID>\` command to show your appreciation!`);
-    }
-
-    if(!message.content.startsWith(prefix)) return;  
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const commandName = args.shift().toLowerCase();
-    const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-    if (!cooldowns.has(command.name)) {
-      cooldowns.set(command.name, new Discord.Collection());
-    }
-    
-    const now = Date.now();
-    const timestamps = cooldowns.get(command.name);
-    const cooldownAmount = (command.cooldown || 1) * 1000;
-    
-    if (timestamps.has(message.author.id)) {
-      const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+      `SELECT thanks FROM Guilds WHERE guildId = ?;`,
+      [message.guild.id]
+    );
+    const th = results3[0][0].thanks;
+    if(th === 'on') { // if thanks is on
+      //prefixes
+    const prefix = client.guildCommandPrefixes.get(message.guild.id);
+      const thnks = [ 'thanks', 'thnx', 'thank',  'tnx',  'ty', 'Thanks', 'Thank', 'thx'];
+      const isthanks = thnks.reduce((alrdyGood, curr) => alrdyGood || message.content.toLowerCase().split(' ').includes(curr), false);
+      if(isthanks && !message.content.startsWith(config.client.prefix)) {
+        message.reply(`It seems like someone\'s problem was resolved! I\'m glad someone was able to help you! Please use the \`s.thanks <@username or ID>\` command to show your appreciation!`);
+      }
   
-      if (now < expirationTime) {
-        const timeLeft = (expirationTime - now) / 1000;
-        return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+      if(!message.content.startsWith(prefix)) return;  
+      const args = message.content.slice(prefix.length).trim().split(/ +/);
+      const commandName = args.shift().toLowerCase();
+      const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+      if (!cooldowns.has(command.name)) {
+        cooldowns.set(command.name, new Discord.Collection());
+      }
+      
+      const now = Date.now();
+      const timestamps = cooldowns.get(command.name);
+      const cooldownAmount = (command.cooldown || 1) * 1000;
+      
+      if (timestamps.has(message.author.id)) {
+        const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+    
+        if (now < expirationTime) {
+          const timeLeft = (expirationTime - now) / 1000;
+          return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+        }
+      }
+    
+      timestamps.set(message.author.id, now);
+      setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+  
+      if (!command) return; 
+  
+      try {
+        command.execute(message, args, client);
+      } catch (error) {
+        console.error(error);
+        message.reply('there was an error trying to execute that command!');
+      }
+    /* ---------------------------------------------
+    REGULAR COMMANDS / THANKS SYSTEM OFF
+    ------------------------------------------------
+    */
+    } else { 
+      //prefixes
+      const prefix = client.guildCommandPrefixes.get(message.guild.id);
+      if(!message.content.startsWith(prefix)) return;  
+      const args = message.content.slice(prefix.length).trim().split(/ +/);
+      const commandName = args.shift().toLowerCase();
+      const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+      if(!command) return message.reply('That was an invalid command.');
+      if (!cooldowns.has(command.name)) {
+        cooldowns.set(command.name, new Discord.Collection());
+      }
+      
+      const now = Date.now();
+      const timestamps = cooldowns.get(command.name);
+      const cooldownAmount = (command.cooldown || 1) * 1000;
+      
+      if (timestamps.has(message.author.id)) {
+        const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+    
+        if (now < expirationTime) {
+          const timeLeft = (expirationTime - now) / 1000;
+          return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+        }
+      }
+    
+      timestamps.set(message.author.id, now);
+      setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+  
+      try {
+        command.execute(message, args, client);
+      } catch (error) {
+        console.error(error);
+        message.reply('there was an error trying to execute that command!');
       }
     }
-  
-    timestamps.set(message.author.id, now);
-    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+}); // end client.on message
 
-    if (!command) return; 
-
-    try {
-      command.execute(message, args, client);
-    } catch (error) {
-      console.error(error);
-      message.reply('there was an error trying to execute that command!');
-    }
-  /* ---------------------------------------------
-  REGULAR COMMANDS / THANKS SYSTEM OFF
-  ------------------------------------------------
-  */
-  } else { 
-    //prefixes
-  const prefix = client.guildCommandPrefixes.get(message.guild.id);
-    if(!message.content.startsWith(prefix)) return;  
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const commandName = args.shift().toLowerCase();
-    const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-    if (!cooldowns.has(command.name)) {
-      cooldowns.set(command.name, new Discord.Collection());
-    }
-    
-    const now = Date.now();
-    const timestamps = cooldowns.get(command.name);
-    const cooldownAmount = (command.cooldown || 1) * 1000;
-    
-    if (timestamps.has(message.author.id)) {
-      const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-  
-      if (now < expirationTime) {
-        const timeLeft = (expirationTime - now) / 1000;
-        return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
-      }
-    }
-  
-    timestamps.set(message.author.id, now);
-    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-
-    if (!command) return; 
-
-    try {
-      command.execute(message, args, client);
-    } catch (error) {
-      console.error(error);
-      message.reply('there was an error trying to execute that command!');
-    }
-  }
-
- }
+/* ---------------------------------
+GHOST PINGS & AUDIT LOGS
+------------------------------------ */
+client.on("channelDelete", async (channel) => {
+  console.log(`channel was deleted.`); // audit log stuff goes here.
 });
 
-client.on('messageDelete', message => {
+client.on('messageDelete', async message => {
+
+  	// Get audit log channel.
+const results = await connection.query(
+	`SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+	[message.guild.id]
+  );
+  const logId = results[0][0].auditLog;
   GhostPing.detector("messageDelete", message, {
     title: `Ghost Ping Detected`,
     color: `C0C0C0`,
     footer: `Don't Ghost Ping, smh`,
     picture: `https://i.imgur.com/k6pLhtU.png`,
-    channel: `450906618234929152`,
+    channel: logId,
     ignorePerms: ['ADMINISTRATOR', 'MANAGE_MESSAGES']
-  })
+  });
+
+  // Ignore direct messages
+	if (!message.guild) return;
+	const fetchedLogs = await message.guild.fetchAuditLogs({
+		limit: 1,
+		type: 'MESSAGE_DELETE',
+	});
+	// Since we only have 1 audit log entry in this collection, we can simply grab the first one
+	const deletionLog = fetchedLogs.entries.first();
+
+	// Let's perform a coherence check here and make sure we got *something*
+	if (!deletionLog) return message.guild.channels.cache.get(logId).send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
+
+	// We now grab the user object of the person who deleted the message
+	// Let us also grab the target of this action to double-check things
+	const { executor, target } = deletionLog;
+
+	// And now we can update our output with a bit more information
+	// We will also run a check to make sure the log we got was for the same author's message
+	if (target.id === message.author.id) {
+		message.guild.channels.cache.get(logId).send(`A message by ${message.author.tag} was deleted by ${executor.tag}. The message said: ${message.content}`);
+	} else {
+		message.guild.channels.cache.get(logId).send(`A message by ${message.author.tag} was deleted which said ${message.content}, but we don't know by who.`);
+	}
 });
 
 client.on('messageUpdate', (oldMessage, newMessage) => { 
   GhostPing.detector('messageUpdate', oldMessage, newMessage)
 });
 
-/*
-------------------------------------------
-MODMAIL
-------------------------------------------
-*/
-client.on("channelDelete", async (channel) => {
-  const res2 = await connection.query(
-    `SELECT modmail FROM Guilds WHERE guildId = ?;`,
-    [channel.guild.id]
-  );
-  const modmail = res2[0][0].modmail;
-  if (channel.parentID == channel.guild.channels.cache.find((x) => x.id == `${modmail}`).id !== 'off') { // modmail log here.
-      const person = channel.guild.members.cache.find((x) => x.id == channel.name)
+client.on('messageUpdate', async (oldMessage, newMessage) => { 
+  // Get audit log channel.
+const results = await connection.query(
+`SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+[oldMessage.guild.id]
+);
+const logId = results[0][0].auditLog;
+GhostPing.detector('messageUpdate', oldMessage, newMessage);
 
-      if (!person) return;
+const fetchedLogs = await oldMessage.guild.fetchAuditLogs({
+  limit: 1,
+  type: 'MESSAGE_UPDATE',
+});
+// Since we only have 1 audit log entry in this collection, we can simply grab the first one
+const updateLog = fetchedLogs.entries.first();
 
-      let yembed = new discord.MessageEmbed()
-          .setAuthor("MAIL DELETED", client.user.displayAvatarURL())
-          .setColor('RED')
-          .setDescription("Your mail was deleted by a staff member!")
-      return person.send(yembed)
+// Let's perform a coherence check here and make sure we got *something*
+if (!updateLog) return message.guild.channels.cache.get(logId).send(`A message by ${message.author.tag} was updated, but no relevant audit logs were found.`);
 
-  } else {
-    console.log(`channel was deleted.`); // audit log stuff goes here.
-  }
+// We now grab the user object of the person who deleted the message
+// Let us also grab the target of this action to double-check things
+const { executor, target } = updateLog;
+
+// And now we can update our output with a bit more information
+// We will also run a check to make sure the log we got was for the same author's message
+if (target.id === oldMessage.author.id) {
+  oldMessage.guild.channels.cache.get(logId).send(`A message by ${oldMessage.author.tag} was updated by ${executor.tag}. The message said: ${oldMessage.content}. Now it says: ${newMessage.content}`);
+} else {
+  oldMessage.guild.channels.cache.get(logId).send(`A message by ${oldMessage.author.tag} was updated which said ${oldMessage.content} and now it says ${newMessage.content}, but we don't know by who.`);
+}
 });
 
+client.on("guildCreate", async guild => { // works!
+  try {
+    await connection.query(
+      `INSERT INTO Guilds (guildId, guildName, ownerID, region, auditLog, prefix, thanks) VALUES(?, ?, ?, ?, ?, ?, ?);`,
+      [guild.id, guild.name, guild.ownerID, guild.region, 'off', 's.', 'off']
+    );
+  } catch(err) {
+    console.log(err);
+  }
+const test = '718253204147798047';
+// Get audit log channel.
+const results = await connection.query(
+  `SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+  [test]
+  );
+  const logId = results[0][0].auditLog;
+  console.log(logId);
+  const owner = await client.users.fetch(guild.owner.id);
+  const name = owner.tag;
+  guild.channels.cache.fetch(logId).send(`I have just been added to ${guild.name} by ${name}`);
+})
+
+//removed from a server
+client.on("guildDelete", async guild => {
+const test = '718253204147798047';
+// Get audit log channel.
+const results = await connection.query(
+  `SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+  [test]
+  );
+
+  const logId = results[0][0].auditLog;
+  console.log(logId);
+  const owner = await client.users.fetch(guild.owner.id);
+  const name = owner.tag;
+  guild.channels.cache.fetch(logId).send(`I have just been removed from ${guild.name} by ${name}`);
+});
+
+client.on('guildMemberAdd', async (member) => {
+// Get audit log channel.
+const results = await connection.query(
+  `SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+  [member.guild.id]
+  );
+  const logId = results[0][0].auditLog;
+const fetchedLogs = await member.guild.fetchAuditLogs({
+  limit: 1,
+  type: 'MEMBER_KICK',
+});
+// Since we only have 1 audit log entry in this collection, we can simply grab the first one
+const kickLog = fetchedLogs.entries.first();
+
+// Let's perform a coherence check here and make sure we got *something*
+if (!kickLog) return guild.channels.cache.get(logId).send(`${member.user.tag} left the guild, most likely of their own will.`);
+
+// We now grab the user object of the person who kicked our member
+// Let us also grab the target of this action to double-check things
+const { executor, target } = kickLog;
+
+// And now we can update our output with a bit more information
+// We will also run a check to make sure the log we got was for the same kicked member
+if (target.id === member.id) {
+  member.guild.channels.cache.get(logId).send(`${member.user.tag} joined the guild.`);
+} else {
+  member.guild.channels.cache.get(logId).send(`${member.user.tag} joined the guild, not sure from where though.`);
+}
+});
+
+
+client.on('guildMemberRemove', async (member) => {
+// Get audit log channel.
+const results = await connection.query(
+  `SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+  [member.guild.id]
+  );
+  const logId = results[0][0].auditLog;
+const fetchedLogs = await member.guild.fetchAuditLogs({
+  limit: 1,
+  type: 'MEMBER_KICK',
+});
+// Since we only have 1 audit log entry in this collection, we can simply grab the first one
+const kickLog = fetchedLogs.entries.first();
+
+// Let's perform a coherence check here and make sure we got *something*
+if (!kickLog) return guild.channels.cache.get(logId).send(`${member.user.tag} left the guild, most likely of their own will.`);
+
+// We now grab the user object of the person who kicked our member
+// Let us also grab the target of this action to double-check things
+const { executor, target } = kickLog;
+
+// And now we can update our output with a bit more information
+// We will also run a check to make sure the log we got was for the same kicked member
+if (target.id === member.id) {
+  member.guild.channels.cache.get(logId).send(`${member.user.tag} left the guild; kicked by ${executor.tag}?`);
+} else {
+  member.guild.channels.cache.get(logId).send(`${member.user.tag} left the guild, audit log fetch was inconclusive.`);
+}
+});
+
+client.on('guildBanAdd', async (guild, user) => {
+// Get audit log channel.
+const results = await connection.query(
+  `SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+  [guild.id]
+  );
+  const logId = results[0][0].auditLog;
+const fetchedLogs = await guild.fetchAuditLogs({
+  limit: 1,
+  type: 'MEMBER_BAN_ADD',
+});
+// Since we only have 1 audit log entry in this collection, we can simply grab the first one
+const banLog = fetchedLogs.entries.first();
+
+// Let's perform a coherence check here and make sure we got *something*
+if (!banLog) return guild.channels.cache.get(logId).send(`${user.tag} was banned from ${guild.name} but no audit log could be found.`);
+
+// We now grab the user object of the person who banned the user
+// Let us also grab the target of this action to double-check things
+const { executor, target } = banLog;
+
+// And now we can update our output with a bit more information
+// We will also run a check to make sure the log we got was for the same kicked member
+if (target.id === user.id) {
+  guild.channels.cache.get(logId).send(`${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, wielded by the mighty ${executor.tag}`);
+} else {
+  guild.channels.cache.get(logId).send(`${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, audit log fetch was inconclusive.`);
+}
+});
+
+client.on('guildBanRemove', async (guild, user) => {
+// Get audit log channel.
+const results = await connection.query(
+  `SELECT auditLog FROM Guilds WHERE guildId = ?;`,
+  [guild.id]
+  );
+  const logId = results[0][0].auditLog;
+const fetchedLogs = await guild.fetchAuditLogs({
+  limit: 1,
+  type: 'MEMBER_BAN_ADD',
+});
+// Since we only have 1 audit log entry in this collection, we can simply grab the first one
+const banLog = fetchedLogs.entries.first();
+
+// Let's perform a coherence check here and make sure we got *something*
+if (!banLog) return guild.channels.cache.get(logId).send(`${user.tag} was banned from ${guild.name} but no audit log could be found.`);
+
+// We now grab the user object of the person who banned the user
+// Let us also grab the target of this action to double-check things
+const { executor, target } = banLog;
+
+// And now we can update our output with a bit more information
+// We will also run a check to make sure the log we got was for the same kicked member
+if (target.id === user.id) {
+  guild.channels.cache.get(logId).send(`${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, wielded by the mighty ${executor.tag}`);
+} else {
+  guild.channels.cache.get(logId).send(`${user.tag} got hit with the swift hammer of justice in the guild ${guild.name}, audit log fetch was inconclusive.`);
+}
+});
 
 
 /*
