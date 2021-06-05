@@ -20,23 +20,18 @@ CREATE TABLE reactionRoles (
 );
 
 CREATE TABLE Suggs (
-    guildId VARCHAR(100) NOT NULL,
-    noSugg BIGINT(255) NOT NULL,
+    noSugg VARCHAR(255) NOT NULL,
     Author VARCHAR(300) NOT NULL,
-    Message VARCHAR(50000) NOT NULL,
+    Avatar VARCHAR(2048) NOT NULL,
+    Message mediumtext NOT NULL,
     Moderator VARCHAR(300) NOT NULL,
-    LAST_EDITED TIMESTAMP NOT NULL,
-    STATUS VARCHAR(300) NOT NULL DEFAULT 'Needs votes!',
-    UNIQUE KEY(guildId, Author)
+    LAST_EDITED TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+    stat VARCHAR(2048) NOT NULL "Needs votes!"
 );
 
 CREATE TABLE Challenges (
     guildId VARCHAR(100) NOT NULL,
-    player VARCHAR(300) NOT NULL,
-    challengeAnnouncementsChannel VARCHAR(100) NOT NULL,
-    submissionsDumpChannel VARCHAR(100) NOT NULL,
-    challengeParticipants VARCHAR(100) NOT NULL,
-    UNIQUE KEY(guildId, player)
+    player VARCHAR(300) NOT NULL PRIMARY KEY
 );
 
 CREATE TABLE Points (
@@ -51,21 +46,23 @@ CREATE TABLE Points (
 
 CREATE TABLE Challenge (
     guildId VARCHAR(100) NOT NULL,
-    msgId BIGINT(255) NOT NULL,
+    msgId VARCHAR(255) NOT NULL PRIMARY KEY,
+    channelD VARCHAR(255) NOT NULL,
     moderator VARCHAR(300) NOT NULL,
     title VARCHAR(500) NOT NULL,
-    description VARCHAR(50000) NOT NULL,
-    dayNo INT(255) NOT NULL,
-    LAST_EDITED TIMESTAMP NOT NULL,
-    UNIQUE KEY(guildId,msgId)
+    description mediumtext NOT NULL,
+    challengeNo VARCHAR(255) NOT NULL,
+    prize1 VARCHAR(1000) NOT NULL,
+    prize2 VARCHAR(1000) NOT NULL,
+    prize3 VARCHAR(1000) NOT NULL
 );
 
 CREATE TABLE Submissions (
     guildId VARCHAR(100) NOT NULL,
-    msgId BIGINT(255) NOT NULL,
-    Author VARCHAR(300) NOT NULL,
-    Message VARCHAR(50000) NOT NULL,
-    LAST_EDITED TIMESTAMP NOT NULL,
-    dayNo INT(255) NOT NULL,
-    UNIQUE KEY(guildId,msgId)
+    msgId VARCHAR(1000) NOT NULL PRIMARY KEY,
+    author VARCHAR(300) NOT NULL,
+    message mediumtext NOT NULL,
+    challengeNo VARCHAR(255),
+    moderator VARCHAR(255),
+    points VARCHAR(1000)
 );
