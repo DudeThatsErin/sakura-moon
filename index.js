@@ -9,6 +9,7 @@ const GhostPing = require('discord.js-ghost-ping');
 client.cooldowns = new Discord.Collection();
 const { cooldowns } = client;
 let connection;
+client.guildCommandPrefixes = new Discord.Collection();
 
 const options = {
   commandsDir: 'commands', // commands folder path (required)
@@ -24,19 +25,19 @@ const handler = new SHClient(client, options);
 const commands = [
   {
     name: 'ping',
-    description: 'Advises how long I have been online and checks to make sure I can receive commands successfully.',
+    description: 'Replies pong!',
   },
   {
     name: 'help',
-    description: 'Allows you to see all of my commands. Slash and otherwise.',
+    description: 'Allows you to see all of my commands.',
   },
   {
     name: 'user-info',
-    description: 'Allows you to see information about yourself or other users.',
+    description: 'See info about you or others.',
     options:[
       {
-          name:'user',
-          description:'Who\'s avatar do you want to see? If you don\'t ping anyone, you will get a link to your own avatar.',
+          name:'input',
+          description:'Choose a user.',
           type: 6,
           required: false
       }
@@ -52,11 +53,11 @@ const commands = [
   },
   {
     name: 'avatar',
-    description: 'I will provide links to your avatar or whomever you ping\'s avatar.',
+    description: 'Get a link to an avatar.',
     options:[
       {
-          name:'user',
-          description:'Who\'s avatar do you want to see? If you don\'t ping anyone, you will get a link to your own avatar.',
+          name:'input',
+          description:'Choose a user.',
           type: 6,
           required: false
       }
@@ -64,10 +65,10 @@ const commands = [
   },
   {
     name: 'prune',
-    description: 'Allows **mods** to mass delete messages in a channel.',
+    description: 'Mass delete messages in a channel.',
     options:[
       {
-          name:'number of messages',
+          name:'input',
           description:'How many messages should I prune?',
           type: 4,
           required: true
@@ -76,6 +77,8 @@ const commands = [
   },
 ]
 const guilds = ['849645937202036757', '821170440571322389'] //for guild specific commands pass an array for guildIDs. If none, will default to global command
+
+console.log(commands.description.length)
 
 console.log('----- LOGGING IN -----')
 client.on('ready', () => {
@@ -92,7 +95,7 @@ client.on('ready', () => {
       ).then(result => {
         client.guildCommandPrefixes.set(guild.id, result[0][0].prefix);
       });
-    }).catch(err => console.log(err));
+    });
 
     handler.create(commands, guilds);
 });
