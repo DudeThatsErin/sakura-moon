@@ -3,7 +3,7 @@ const moment = require('moment');
 
 module.exports = {
     name: 'userinfo',
-    description: 'This allows users to find out more information about themselves or another user they ping or provide the ID for.',
+    description: 'See info about you or others.',
     aliases: ['user', 'person', 'useri', 'user-info'],
     usage: 's.userinfo',
     inHelp:'yes',

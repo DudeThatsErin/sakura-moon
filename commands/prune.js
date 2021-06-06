@@ -4,8 +4,8 @@ module.exports = {
     name: 'prune', 
     description: 'Delete up to 99 messages. Only users with the `MANAGE_MESSAGES` role will be able to use this command.',
     aliases: ['delete', 'goaway'],
-    usage: 's.prune number',
-    example: 's.prune 49',
+    usage: '++prune [number 2-99]',
+    example: '++prune 49',
     inHelp: 'yes',
     execute(message, args) {
 

@@ -17,7 +17,6 @@ module.exports = {
             );
             message.reply(`I have updated your prefix to \`${newPrefix}\``); // sends successfully & updates in the db.
             client.guildCommandPrefixes.set(message.guild.id, newPrefix);
-            console.log(client.guildCommandPrefixes.get(message.guild.id));
         } else {
             message.reply('Only **guild owners** can run this command.');
             return;

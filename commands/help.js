@@ -1,28 +1,30 @@
 const paginationEmbed = require('discord.js-pagination');
 const { MessageEmbed } = require('discord.js');
 const config = require("../config.json");
+const connection = require('../database.js');
 
 module.exports = {
 	name: 'help',
     description: 'This allows users to find out more information about themselves or another user they ping or provide the ID for.',
     aliases: ['h', 'halp', 'command', 'commands'],
-    usage: 's.help',
+    usage: `s.help`,
     inHelp:'yes',
-    example: 's.help or s.h or s.halp',
-    async execute (msg, args) {
+    example: `s.help or s.h or s.halp`,
+    async execute (msg, args, client) {
+		let prefix = client.guildCommandPrefixes.get(msg.guild.id);
 
 		const embed1 = new MessageEmbed()
 			.setColor('#6683AD')
 			.setTitle('Help Menu page 1 - General Commands')
-			.setDescription('These are all of the commands Sakura Moon can do. If you want to get more information you can do \`s.help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.')
+			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields(
-				{ name: 'These are commands any user can use.', value: '```css\nping\navatar\nuser-info\nserver-info\nbot-info\ninvite - **NOT FINISHED YET**\nhelp\n```' },
+				{ name: 'These are commands any user can use.', value: '```css\nping\navatar\nuser-info\nserver-info\nbot-info\ninvite\nhelp\n```' },
 			);
 		
 		const embed2 = new MessageEmbed()
 			.setColor('#6683AD')
 			.setTitle('Help Menu page 2 - Suggestion System Commands')
-			.setDescription('These are all of the commands Sakura Moon can do. If you want to get more information you can do \`s.help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.')
+			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields(
 				{ name: 'These are commands any user can use for our Suggestions System.', value: '```css\nsuggestions\neditsugg\nstatussug\n```' },
 				{ name: 'These are our **moderator** only commands for our Suggestions System.', value: '```css\nprog-sugg\ndenied-sugg\ncompletedsugg\n```' }
@@ -31,7 +33,7 @@ module.exports = {
 		const embed3 = new MessageEmbed()
 			.setColor('#6683AD')
 			.setTitle('Help Menu page 3 - Challenge System Commands')
-			.setDescription('These are all of the commands Sakura Moon can do. If you want to get more information you can do \`s.help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.')
+			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields(
 				{ name: 'These are commands any user can use for our Challenge System.', value: '```css\nsubmit\nedit-submission\nchallenge-leaderboard\n```' },
 				{ name: 'These are our **moderator** only commands for our Challenge System.', value: '```css\nadd-members\nadd-users\ncheck-participants\nremove-participant\nstart-challenge\nchallenge\nedit-challenge\ncheck-submissions\nreviewed\npurge-submissions\nend-challenge\n```' }
@@ -40,7 +42,7 @@ module.exports = {
 		const embed4 = new MessageEmbed()
 			.setColor('#6683AD')
 			.setTitle('Help Menu page 4 - Thanks System Commands')
-			.setDescription('These are all of the commands Sakura Moon can do. If you want to get more information you can do \`s.help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.')
+			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields(
 				{ name: 'These are teh commands you can use for our Thanks System.', value: '```css\nthanks\nthanks-on\nthanks-off\nthanks-leaderboard\n```' }
 			);
@@ -48,9 +50,9 @@ module.exports = {
 		const embed5 = new MessageEmbed()
 			.setColor('#6683AD')
 			.setTitle('Help Menu page 5 - Moderator Only Commands')
-			.setDescription('These are all of the commands Sakura Moon can do. If you want to get more information you can do \`s.help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.')
+			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields(
-				{ name: 'These are general **moderator** only commands. Meaning only **moderators** can use these commands.', value: '```css\nprune\nupdate-prefix\nreset-prefix\nmute\nunmute\nwarn\nkick\nban\nunban\naudit-log\nlogs-off\n```' }
+				{ name: 'These are general **moderator** only commands. Meaning only **moderators** can use these commands.', value: '```css\nprune\nupdate-prefix\nreset-prefix\nmute\nunmute\nwarn\nkick\nban\nunban\n```' }
 			);
 
 		pages = [
