@@ -8,8 +8,15 @@ module.exports = {
     description: 'Allows **mods** to deny a particular suggestion.',
     usage: 's.deniedsugg messageID [reason]',
     example: 's.deniedsugg 847580954306543616 I don\'t want to do what you suggested! GO AWAY!',
+    note: 'In order for mods to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    permissions: ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
     async execute(message, args) {
-        let role = ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'];
+
+      const results = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');        let role = ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'];
         if(!message.member.guild.me.hasPermission([`${role}`])){ 
             message.channel.send('You do not have permission to run this command. Only users with one of the following permissions can run this command:\n\`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`');
             return;
@@ -17,7 +24,7 @@ module.exports = {
         const msgId = args[0];
         if(msgId > 0 ) {
             try {
-                const result = await connection.query(
+                const result = await (await connection).query(
                     `SELECT noSugg from Suggs WHERE noSugg = ?;`,
                     [msgId]
                 );
@@ -27,20 +34,20 @@ module.exports = {
                 console.log(error);
             }
 
-        const result2 = await connection.query(
+        const result2 = await (await connection).query(
             `SELECT Author from Suggs WHERE noSugg = ?;`,
             [msgId],
         );
         const OGauthor = result2[0][0].Author;
         const aut = OGauthor.tag;
 
-        const result3 = await connection.query(
+        const result3 = await (await connection).query(
             `SELECT Message from Suggs WHERE noSugg = ?;`,
             [msgId],
         );
         const suggestion = result3[0][0].Message;
 
-        const result4 = await connection.query(
+        const result4 = await (await connection).query(
             `SELECT Avatar from Suggs WHERE noSugg = ?;`,
             [msgId],
         );
@@ -56,13 +63,13 @@ module.exports = {
             [stats, mod, msgId],
         );
 
-        const result8 = await connection.query(
+        const result8 = await (await connection).query(
             `SELECT stat FROM Suggs WHERE noSugg = ?;`,
             [msgId]
         );
         const upStatus = result8[0][0].stat;
 
-        const moderator = await connection.query(
+        const moderator = await (await connection).query(
             `SELECT Moderator FROM Suggs WHERE noSugg = ?;`,
             [msgId]
         );
@@ -83,7 +90,7 @@ module.exports = {
             message.channel.send(`I have denied the suggestion you told me to, <@${moder}>. I also sent a message to <@${OGauthor}> about this denial and the reason as well as deleted the message in the Suggestions channel.`)
                 message.delete();
                 try {
-                    await connection.query(
+                    await (await connection).query(
                         `DELETE FROM Suggs WHERE noSugg = ? AND Author = ?;`,
                         [msgId, OGauthor],
                     );

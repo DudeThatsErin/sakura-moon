@@ -10,7 +10,15 @@ module.exports = {
     example: 's.thanks-leaderboard or s.thxldb or s.txlbd',
     cooldown: 5,
     inHelp: 'yes',
-    async execute (message, args) {
+    note: 'In order for users to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    permissions: '',
+    async execute (message, args, client) {
+
+      const result0 = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(result0[0][0] === undefined || result0[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         let guild = message.guild.id;
         let author = message.author.id;
         let aUsername = message.author.username;
@@ -19,20 +27,20 @@ module.exports = {
         let points = '';
 
 
-        const results = await connection.query(
-            `SELECT * FROM Thanks WHERE user = ? AND guildId = ?;`,
+        const results = await (await connection).query(
+            `SELECT * FROM Thanks WHERE userId = ? AND guildId = ?;`,
             [author, guild]
         );
 
-        const top10 = await connection.query(
-            `SELECT user, SUM(CAST(thanks AS UNSIGNED)) AS total FROM Thanks WHERE guildId = ? GROUP BY user ORDER BY total DESC LIMIT 10;`,
+        const top10 = await (await connection).query(
+            `SELECT userId, SUM(CAST(thanks AS UNSIGNED)) AS total FROM Thanks WHERE guildId = ? GROUP BY userId ORDER BY total DESC LIMIT 10;`,
             [guild]
         );
 
         for (let i = 0; i < top10[0].length; i++) {
             const data = top10[0];
-            const user = data[i].user;
-            let membr = await message.client.users.fetch(user).catch(err => {console.log(err);});
+            const user = data[i].userId;
+            let membr = await client.users.cache.get(user);
             let username = membr.username;
 
             userNames += `${i + 1}. ${username}\n`;
@@ -59,13 +67,13 @@ module.exports = {
     message.channel.send(embed2);
 
          } else {
-            const ponts = await connection.query(
-                `SELECT thanks, SUM(CAST(thanks AS UNSIGNED)) AS total FROM Thanks WHERE guildId = ? AND user = ?;`,
+            const ponts = await (await connection).query(
+                `SELECT thanks, SUM(CAST(thanks AS UNSIGNED)) AS total FROM Thanks WHERE guildId = ? AND userId = ?;`,
                 [guild, author]
             );
             const p = ponts[0][0].total;
             let embed2 = new Discord.MessageEmbed()
-                .setTitle('This is the current challenge leaderboard.')
+                .setTitle('This is the current thanks leaderboard.')
                 .setColor('#c9ca66')
                 .addFields(
                     {name: `Top 10`, value: userNames, inline: true},

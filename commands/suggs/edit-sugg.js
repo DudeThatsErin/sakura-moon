@@ -5,32 +5,39 @@ const connection = require('../../database.js');
 module.exports = {
     name: 'editsugg',
     aliases: ['edits', 'es', 'editsuggestion', 'editsuggestions', 'editsuggs', 'us', 'updatesuggestion', 'updatesugg', 'updates', 'edit-suggestions', 'edit-suggestion', 'update-suggestion', 'update-suggestions'],
-    description: 'Users can update their suggestion with this command.\n**Note:** Only the original poster\'s of the suggestion can edit the message. Meaning someone posts a suggestion and only that person can edit the suggestion, no one else.',
+    description: 'Users can update their suggestion with this command.',
     usage: 's.editsugg messageID [updated message]',
     inHelp: 'yes',
     example: 's.editsugg 847580954306543616 I need to update my suggestion!',
+    permissions: '',
+    note: 'Only the original poster\'s of the suggestion can edit the message. Meaning someone posts a suggestion and only that person can edit the suggestion, no one else.\nIn order for mods to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
     async execute(message, args) {
 
+      const results = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         const msgId = args[0];
-        const result = await connection.query(
+        const result = await (await connection).query(
             `SELECT noSugg from Suggs WHERE noSugg = ?;`,
             [msgId]
         );
         const mId = result[0][0].noSugg;
 
-        const result2 = await connection.query(
+        const result2 = await (await connection).query(
             `SELECT Author from Suggs WHERE noSugg = ?;`,
             [msgId],
         );
         const author = result2[0][0].Author;
 
-        const result3 = await connection.query(
+        const result3 = await (await connection).query(
             `SELECT Message from Suggs WHERE noSugg = ?;`,
             [msgId],
         );
         const suggestion = result3[0][0].Message;
 
-        const result4 = await connection.query(
+        const result4 = await (await connection).query(
             `SELECT Avatar from Suggs WHERE noSugg = ?;`,
             [msgId],
         );
@@ -46,7 +53,7 @@ module.exports = {
             [stats, update, msgId],
         );
 
-        const result8 = await connection.query(
+        const result8 = await (await connection).query(
             `SELECT Message FROM Suggs WHERE noSugg = ?;`,
             [msgId]
         );

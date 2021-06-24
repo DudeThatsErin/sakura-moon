@@ -7,8 +7,16 @@ module.exports = {
     aliases: ['rs', 'rmsubs', 'rm-subs', 'removesubmissions', 'removesubmission', 'rmsub'],
     usage: 's.remove-submissions [message ID]',
     example: 's.remove-submissions 841301824115965952',
+    permissions: ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
+    note: 'In order for mods to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon) and they need to have one of the following permissions:\`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`.',
     inHelp: 'yes',
     async execute (message, args) {
+
+      const results = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         let name = message.author.id;
         const modname = await message.client.users.fetch(name).catch(err => {console.log(err);});
         let submission = args[0];
@@ -21,7 +29,7 @@ module.exports = {
                 message.channel.send('Please include the message ID of the submission you want to remove. Thank you!');
                 return;
             } else {
-                const results = await connection.query(
+                const results = await (await connection).query(
                     `SELECT * FROM Submissions WHERE msgId = ? AND guildId = ?;`,
                     [submission, message.guild.id]
                 )
@@ -39,7 +47,7 @@ module.exports = {
 
                         message.channel.send(embed);
 
-                        await connection.query(
+                        await (await connection).query(
                             `DELETE FROM Submissions WHERE msgId = ? AND guildId = ?;`,
                             [submission, message.guild.id]
                         );

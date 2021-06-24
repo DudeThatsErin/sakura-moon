@@ -8,7 +8,15 @@ module.exports = {
     usage: 's.end-challenge',
     example: 's.end-challenge',
     inHelp: 'yes',
+    permissions: ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
+    note: 'In order for mods to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon) and they need to have one of the following permissions:\`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`.',
     async execute (message, args) {
+
+      const results = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');        
         let userNames = '';
         let points = '';
         let role = ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'];
@@ -17,28 +25,24 @@ module.exports = {
             return;
         } else {
                         
-            connection.query(
+            await (await connection).query(
                 `DELETE FROM Challenge WHERE guildId = ?;`,
                 [message.guild.id]
             );
-            connection.query(
-                `DELETE FROM Points WHERE guildId = ?;`,
-                [message.guild.id]
-            );
-            connection.query(
+            await (await connection).query(
                 `DELETE FROM Challenges WHERE guildId = ?;`,
                 [message.guild.id]
             );
-            connection.query(
+            await (await connection).query(
                 `DELETE FROM Submissions WHERE guildId = ?;`,
                 [message.guild.id]
             );
 
 
-            const top10 = await connection.query(
-                `SELECT * FROM Points WHERE guildId = ? ORDER BY points DESC LIMIT 10;`, 
+            /*const top10 = await (await connection).query(
+                `SELECT * FROM Submissions WHERE guildId = ? ORDER BY points DESC LIMIT 10;`, 
                 [message.guild.id]
-            );    
+            );    */
     
 
             message.reply('I have deleted everything from the databases and ended the challenge for you!')

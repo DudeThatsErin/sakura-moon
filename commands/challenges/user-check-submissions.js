@@ -8,10 +8,18 @@ module.exports = {
     usage: 's.user-check-submissions',
     example: 's.user-check-submissions',
     inHelp: 'yes',
+    permissions: '',
+    note: 'In order for users to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon).',
     async execute (message, args) {
+
+      const results = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         let name = message.author.id;
 
-        const result = await connection.query(
+        const result = await (await connection).query(
             `SELECT * FROM Submissions WHERE guildId = ? AND author = ?;`,
             [message.guild.id, name]
         );

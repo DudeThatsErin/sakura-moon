@@ -3,12 +3,20 @@ const connection = require('../../database.js');
 
 module.exports = {
     name: 'leaderboard',
-    description: 'This gives users the ability to see the top 10 users on the leaderboard and also their position on the leaderboard.',
+    description: 'This gives users the ability to see the top 10 users on the leaderboard and also their position on the leaderboard.\nIn order for users to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon).',
     aliases: ['ldbd', 'challenge-leaderboard', 'cleaderboard', 'cldbd', 'lbd', 'ldb'],
     usage: 's.leaderboard',
     example: 's.leaderboard or s.ldb or s.lbd',
     inHelp: 'yes',
+    permissions: '',
+    note: 'In order for users to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon).',
     async execute (message, args) {
+
+      const result0 = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(result0[0][0] === undefined || result0[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         let guild = message.guild.id;
         let author = message.author.id;
         let aUsername = message.author.username;
@@ -16,12 +24,12 @@ module.exports = {
         let userNames = '';
         let points = '';
 
-        const results = await connection.query(
+        const results = await (await connection).query(
             `SELECT * FROM Submissions WHERE author = ? AND guildId = ?;`,
             [author, guild]
         );
 
-        const top10 = await connection.query(
+        const top10 = await (await connection).query(
             `SELECT author, SUM(CAST(points AS UNSIGNED)) AS total FROM Submissions WHERE guildId = ? GROUP BY author ORDER BY total DESC LIMIT 10;`,
             [guild]
         );
@@ -54,7 +62,7 @@ module.exports = {
     message.channel.send(embed2);
 
          } else {
-            const ponts = await connection.query(
+            const ponts = await (await connection).query(
                 `SELECT points, SUM(CAST(points AS UNSIGNED)) AS total FROM Submissions WHERE guildId = ? AND author = ?;`,
                 [guild, author]
             );

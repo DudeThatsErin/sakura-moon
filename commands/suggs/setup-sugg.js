@@ -22,8 +22,15 @@ module.exports = {
     inHelp: 'yes',
     description: 'Sets up the Suggestions system and creates a Suggestions channel amd Discussions channel if there is not one. Stores the channel IDs for the bot to use. You **must** run this first before you can use the Suggestions system.',
     usage: 's.setup-suggs',
+    note: 'In order for mods to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    permissions: ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
     async execute(message, args) {
 
+      const results = await connection.query(
+        `SELECT * from Patrons WHERE guildId = ?;`,
+        [message.guild.id]
+    );
+      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
             message.reply('What name would you like to have for where people submit suggestions?');
             const name = args.join(' ');
             const suggestionsCH = await message.guild.channels.create(name, {
