@@ -2,7 +2,7 @@
  This is my backup of sm for personal reasons.
  
  # Current Issues...
- Permissions system. Same as testing bot.
+ Permissions system. Same as [testing bot](https://github.com/DudeThatsErin/test-bot).
  
  # Future Additions...
  - will be adding audit log system after it is done on testing bot.
