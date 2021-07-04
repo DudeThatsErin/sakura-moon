@@ -5,35 +5,26 @@ module.exports = {
     name: 'prog-sugg',
     aliases: ['inprogsugg', 'workingsugg', 'workingsuggestion', 'inprogresssuggestion', 'inprogresssuggestions', 'workingsuggestion', 'worksugg', 'ps', 'ws'],
     inHelp: 'yes',
-    description: 'Allows **mods** to mark a particular suggestion as *in progress*.\n**Note:** In order for mods to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon) and they need to have one of the following permissions:\`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`.',
+    description: 'Allows **mods** to mark a particular suggestion as *in progress*.',
     usage: 's.prog-sugg messageID [status message]',
-    note: 'In order for mods to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    note: 'You must have one of the following permissions to run this command: \`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`',
     permissions: ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
     example: 's.prog-sugg 847580954306543616 This is the in-progress status for this suggestion.',
+    patreonOnly: 'no',
     async execute(message, args) {
 
-      const results = await connection.query(
-        `SELECT * from Patrons WHERE guildId = ?;`,
-        [message.guild.id]
-    );
-      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
-        let role = ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'];
-        if(!message.member.guild.me.hasPermission([`${role}`])){ 
-            message.channel.send('You do not have permission to run this command. Only users with one of the following permissions can run this command:\n\`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`');
-            return;
-        } else {
-            const msgId = args[0];
-            if(msgId > 0 ) {
-                try {
-                    const result = await (await connection).query(
-                        `SELECT noSugg from Suggs WHERE noSugg = ?;`,
-                        [msgId]
-                    );
-                    const mId = result[0][0].noSugg;
-                } catch(error) {
-                    message.reply('There was an error grabbing the ID from the database. Please report this!');
-                    console.log(error);
-                }
+        const msgId = args[0];
+        if (msgId > 0) {
+            try {
+                const result = await (await connection).query(
+                    `SELECT noSugg from Suggs WHERE noSugg = ?;`,
+                    [msgId]
+                );
+                const mId = result[0][0].noSugg;
+            } catch (error) {
+                message.reply('There was an error grabbing the ID from the database. Please report this!');
+                console.log(error);
+            }
 
             const result2 = await (await connection).query(
                 `SELECT Author from Suggs WHERE noSugg = ?;`,
@@ -41,24 +32,24 @@ module.exports = {
             );
             const OGauthor = result2[0][0].Author;
             let name = (await message.client.users.cache.get(`${OGauthor}`)).tag;
-    
+
             const result3 = await (await connection).query(
                 `SELECT Message from Suggs WHERE noSugg = ?;`,
                 [msgId],
             );
             const suggestion = result3[0][0].Message;
-    
+
             const result4 = await (await connection).query(
                 `SELECT Avatar from Suggs WHERE noSugg = ?;`,
                 [msgId],
             );
             const avatar = result4[0][0].Avatar;
-    
+
             const mod = message.author.id;
-    
+
             const stats = args.slice(1).join(' ');
-            if(!stats) return message.channel.send('You need to include the status of the suggestion as well as the message ID.');
-    
+            if (!stats) return message.channel.send('You need to include the status of the suggestion as well as the message ID.');
+
             try {
                 await (await connection).query(
                     `UPDATE Suggs SET stat = ?, Moderator = ? WHERE noSugg = ?;`,
@@ -74,32 +65,38 @@ module.exports = {
                 [msgId]
             );
             const upStatus = result8[0][0].stat;
-    
+
             const moderator = await (await connection).query(
                 `SELECT Moderator FROM Suggs WHERE noSugg = ?;`,
                 [msgId]
             );
             const moder = moderator[0][0].Moderator;
             const moderate = moder.tag || message.author.tag;
-    
+
             const inprogress = new Discord.MessageEmbed()
                 .setColor('004d4d')
                 .setAuthor(`${name}`, `${avatar}`)
                 .setDescription(`${suggestion}`)
-                .addFields(
-                    { name: 'Current Status', value: `${upStatus}`},
-                    { name: 'The moderator that last updated this was', value: `${moderate}`},
-                )
+                .addFields({
+                    name: 'Current Status',
+                    value: `${upStatus}`
+                }, {
+                    name: 'The moderator that last updated this was',
+                    value: `${moderate}`
+                }, )
                 .setFooter('If you would like to suggest something, use ++suggestions');
-                
+
             const updated = new Discord.MessageEmbed()
                 .setColor('3EA493')
                 .setAuthor(`${name}`, `${avatar}`)
                 .setDescription(`${suggestion}`)
-                .addFields(
-                    { name: 'Your suggestion has been updated! This is the current status:', value: `${upStatus}`},
-                    { name: 'Moderator that updated your suggestion:', value: `${moderate}`},
-                )
+                .addFields({
+                    name: 'Your suggestion has been updated! This is the current status:',
+                    value: `${upStatus}`
+                }, {
+                    name: 'Moderator that updated your suggestion:',
+                    value: `${moderate}`
+                }, )
                 .setTimestamp()
                 .setFooter('If you don\'t understand this status, please contact the moderator that updated your suggestion. Thank you!');
 
@@ -109,11 +106,9 @@ module.exports = {
 
             const chnnel = await message.guild.channels.cache.find(c => c.name === 'suggestions');
             chnnel.messages.fetch(msgId).then(message => {
-                    if(message) message.edit(inprogress);
-                    if(message) message.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                }
-            ).catch(console.error);
-            }
+                if (message) message.edit(inprogress);
+                if (message) message.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
+            }).catch(console.error);
         }
     }
 };

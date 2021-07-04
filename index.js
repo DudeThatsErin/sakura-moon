@@ -4,21 +4,25 @@
   VERSION 1.5
 
   CURRENT ISSUE:
-    THANKS SYSTEM NOT WORKING FOR PATRONS
-    Thanks is undefined on index.js:185:28
+    perms need to be per-channel, per-command based. Making a new perms system. line 315
 */
-const fs = require('fs');
+
 const Discord = require('discord.js');
 const client = new Discord.Client();
-client.commands = new Discord.Collection();
+
+// configurations
 const config = require('./config.json');
 const GhostPing = require('discord.js-ghost-ping');
 client.cooldowns = new Discord.Collection();
 const {
   cooldowns
 } = client;
-const connection = require('./database.js')
+const connection = require('./database.js');
 client.guildCommandPrefixes = new Discord.Collection();
+
+// read command files 
+const fs = require('fs');
+client.commands = new Discord.Collection();
 
 function readFilesFromPath(pathString) {
   const directoryEntries = fs.readdirSync(pathString, {
@@ -43,8 +47,6 @@ function readFilesFromPath(pathString) {
   }, []);
 }
 
-// Call the read files function with the root folder of the commands and
-// store all the file paths in the constant.
 const commandFilePaths = readFilesFromPath('./commands');
 
 // Loop over the array of file paths and set the command on the client.
@@ -52,6 +54,7 @@ commandFilePaths.forEach((filePath) => {
   const command = require(filePath);
 
   client.commands.set(command.name, command);
+
 });
 
 console.log('----- LOGGING IN -----')
@@ -111,9 +114,6 @@ client.on('guildCreate', async (guild) => {
   let ownerID = guild.ownerID;
   let ownerName = client.users.cache.get(ownerID).username;
   let discrim = ownerID.discriminator;
-  let avatar = ownerID.displayAvatarURL({
-    dynamic: true
-  });
   let region = guild.region;
   let auditLog = 'off';
   let currentPrefix = 's.';
@@ -124,7 +124,6 @@ client.on('guildCreate', async (guild) => {
     .setColor('#BB41CE')
     .setTitle('I got added to a new guild!')
     .setDescription(`I was just added to a new guild named: ${guildName}`)
-    .setThumbnail(avatar)
     .addFields({
       name: 'Guild ID:',
       value: `${guildId}`
@@ -173,9 +172,6 @@ client.on('guildDelete', async (guild) => {
   let ownerID = guild.ownerID;
   let ownerName = client.users.cache.get(ownerID).username;
   let discrim = ownerID.discriminator;
-  let avatar = ownerID.displayAvatarURL({
-    dynamic: true
-  });
   let region = guild.region;
   let auditLog = guildResults[0][0].auditLog;
   let currentPrefix = guildResults[0][0].prefix;
@@ -186,7 +182,6 @@ client.on('guildDelete', async (guild) => {
     .setColor('#BB41CE')
     .setTitle('I got removed from a guild! ☹️')
     .setDescription(`I was just from a a new guild named: ${guildName}`)
-    .setThumbnail(avatar)
     .addFields({
       name: 'Guild ID:',
       value: `${guildId}`
@@ -227,258 +222,182 @@ client.on('guildDelete', async (guild) => {
 
 client.on('message', async message => {
   if (message.author.bot) return;
+  /* -----------------------------------------
+  THANKS
+  --------------------------------------------
+  */
+  const results3 = await connection.query(
+    `SELECT thanks FROM Guilds WHERE guildId = ?;`,
+    [message.guild.id]
+  );
+  const th = results3[0][0].thanks;
+  if (th === 'on' || th === '1') { // if thanks is on
+    //get prefix
+    const prefix = client.guildCommandPrefixes.get(message.guild.id);
+    // thanks system
+    const thnks = ['thanks', 'thnx', 'thank', 'tnx', 'ty', 'Thanks', 'Thank', 'thx'];
+    const isthanks = thnks.reduce((alrdyGood, curr) => alrdyGood || message.content.toLowerCase().split(' ').includes(curr), false);
+    if (isthanks && !message.content.startsWith(prefix)) {
+      message.reply(`It seems like someone\'s problem was resolved! I\'m glad someone was able to help you! Please use the \`s.thanks <@username or ID>\` command to show your appreciation!`);
+      console.log('gave thanks')
+    }
 
-  if (message.channel.type !== 'dm') {
-    //console.log(message); works
-    /* -----------------------------------------
-    THANKS
-    --------------------------------------------
-    */
-    const results3 = await connection.query(
-      `SELECT thanks FROM Guilds WHERE guildId = ?;`,
-      [message.guild.id]
-    );
-    // console.log(results3);  works
-    const th = results3[0][0].thanks;
-    //console.log(th); 0 or 1 works
-    if (th === 'on' || th === '1') { // if thanks is on
-      //prefixes
-      const prefix = client.guildCommandPrefixes.get(message.guild.id);
-      //console.log(prefix) works
-      const thnks = ['thanks', 'thnx', 'thank', 'tnx', 'ty', 'Thanks', 'Thank', 'thx'];
-      const isthanks = thnks.reduce((alrdyGood, curr) => alrdyGood || message.content.toLowerCase().split(' ').includes(curr), false);
-      if (isthanks && !message.content.startsWith(prefix)) {
-        message.reply(`It seems like someone\'s problem was resolved! I\'m glad someone was able to help you! Please use the \`s.thanks <@username or ID>\` command to show your appreciation!`);
-        console.log('gave thanks')
-      }
+    if (!message.content.startsWith(prefix)) return;
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+    const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    if (!command) return message.channel.send('That command does not exist. Run \`s.help\` to see all of my commands.');
+    console.log(command); //works
 
-      if (!message.content.startsWith(prefix)) return;
-      const args = message.content.slice(prefix.length).trim().split(/ +/);
-      const commandName = args.shift().toLowerCase();
-      const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-      if (!command) return message.channel.send('That command does not exist. Run \`s.help\` to see all of my commands.');
-      if (!cooldowns.has(command.name)) {
-        cooldowns.set(command.name, new Discord.Collection());
-      }
-      //console.log(command); works
-
-      // In your command.js event file.
-      const validPermissions = [
-        "CREATE_INSTANT_INVITE",
-        "KICK_MEMBERS",
-        "BAN_MEMBERS",
-        "ADMINISTRATOR",
-        "MANAGE_CHANNELS",
-        "MANAGE_GUILD",
-        "ADD_REACTIONS",
-        "VIEW_AUDIT_LOG",
-        "PRIORITY_SPEAKER",
-        "STREAM",
-        "VIEW_CHANNEL",
-        "SEND_MESSAGES",
-        "SEND_TTS_MESSAGES",
-        "MANAGE_MESSAGES",
-        "EMBED_LINKS",
-        "ATTACH_FILES",
-        "READ_MESSAGE_HISTORY",
-        "MENTION_EVERYONE",
-        "USE_EXTERNAL_EMOJIS",
-        "VIEW_GUILD_INSIGHTS",
-        "CONNECT",
-        "SPEAK",
-        "MUTE_MEMBERS",
-        "DEAFEN_MEMBERS",
-        "MOVE_MEMBERS",
-        "USE_VAD",
-        "CHANGE_NICKNAME",
-        "MANAGE_NICKNAMES",
-        "MANAGE_ROLES",
-        "MANAGE_WEBHOOKS",
-        "MANAGE_EMOJIS",
-      ]
-
-      if (command.ownerOnly === 'yes') {
-        if (!message.author.id === config.developer.id) {
-          return message.reply('This is only a command Erin (DudeThatsErin#8061) can use. If you are seeing this in error use the `s.report` command.');
-        }
-      }
-
-      if (command.permissions.length) {
-        let invalidPerms = []
-        for (const perm of command.permissions) {
-          if (!validPermissions.includes(perm)) {
-            return console.log(`Invalid Permissions ${perm}`);
-          }
-          if (!message.member.hasPermission(perm)) {
-            invalidPerms.push(perm);
-          }
-        }
-        if (invalidPerms.length) {
-          return message.channel.send(`Missing Permissions: \`${invalidPerms}\``);
-        }
-      }
-
-      const now = Date.now();
-      const timestamps = cooldowns.get(command.name);
-      const cooldownAmount = (command.cooldown || 1) * 1000;
-
-      if (timestamps.has(message.author.id)) {
-        const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-
-        if (now < expirationTime) {
-          const timeLeft = (expirationTime - now) / 1000;
-          return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
-        }
-      }
-
-      timestamps.set(message.author.id, now);
-      setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-
-      try {
-        command.execute(message, args, client);
-      } catch (error) {
-        console.error(error);
-        const embed = new Discord.MessageEmbed()
-          .setColor('RED')
-          .setTitle('Oh no! An _error_ has appeared!')
-          .setDescription(`**Contact Bot Owner:** <@${config.botOwnerID}>`)
-          .addFields({
-            name: '**Error Name:**',
-            value: `\`${error.name}\``
-          }, {
-            name: '**Error Message:**',
-            value: `\`${error.message}\``
-          }, {
-            name: '**Error Location:**',
-            value: `\`${error.stack}\``
-          }, {
-            name: '**Ways to Report:**',
-            value: '[Join My Support Server](https://discord.gg/tT3VEW8AYF), [Fill out this form](https://codinghelp.site/contact-us/) (Erin owns CodingHelp so that form goes directly to her), Message her on Discord, or Email her at me@dudethatserin.site\n\nPlease include all of the information in this embed (message) as well as any additional information you can think to provide. Screenshots are also VERY helpful. Thank you!'
-          }, )
-          .setTimestamp()
-          .setFooter(`Thanks for using ${client.user.tag}! I'm sorry you encountered this error!`, `${client.user.displayAvatarURL()}`)
-        message.channel.send(embed);
-      }
-      /* ---------------------------------------------
-      REGULAR COMMANDS / THANKS SYSTEM OFF
-      ------------------------------------------------
-      */
-    } else {
-      //prefixes
-      const prefix = client.guildCommandPrefixes.get(message.guild.id);
-      // console.log(prefix); works
-      if (!message.content.startsWith(prefix)) return;
-      const args = message.content.slice(prefix.length).trim().split(/ +/);
-      const commandName = args.shift().toLowerCase();
-      const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-      if (!command) return message.channel.send('That command does not exist. Run \`s.help\` to see all of my commands.');
-      if (!cooldowns.has(command.name)) {
-        cooldowns.set(command.name, new Discord.Collection());
-      }
-      // console.log(command); works
-
-      // In your command.js event file.
-      const validPermissions = [
-        "CREATE_INSTANT_INVITE",
-        "KICK_MEMBERS",
-        "BAN_MEMBERS",
-        "ADMINISTRATOR",
-        "MANAGE_CHANNELS",
-        "MANAGE_GUILD",
-        "ADD_REACTIONS",
-        "VIEW_AUDIT_LOG",
-        "PRIORITY_SPEAKER",
-        "STREAM",
-        "VIEW_CHANNEL",
-        "SEND_MESSAGES",
-        "SEND_TTS_MESSAGES",
-        "MANAGE_MESSAGES",
-        "EMBED_LINKS",
-        "ATTACH_FILES",
-        "READ_MESSAGE_HISTORY",
-        "MENTION_EVERYONE",
-        "USE_EXTERNAL_EMOJIS",
-        "VIEW_GUILD_INSIGHTS",
-        "CONNECT",
-        "SPEAK",
-        "MUTE_MEMBERS",
-        "DEAFEN_MEMBERS",
-        "MOVE_MEMBERS",
-        "USE_VAD",
-        "CHANGE_NICKNAME",
-        "MANAGE_NICKNAMES",
-        "MANAGE_ROLES",
-        "MANAGE_WEBHOOKS",
-        "MANAGE_EMOJIS",
-      ]
-
-      if (command.ownerOnly === 'yes') {
-        if (message.author.id !== config.developer.id) {
-          return message.reply('This is only a command Erin (DudeThatsErin#8061) can use. If you are seeing this in error use the `s.report` command.');
-        }
-      }
-
-      if (command.permissions.length) {
-        let invalidPerms = []
-        for (const perm of command.permissions) {
-          if (!validPermissions.includes(perm)) {
-            return console.log(`Invalid Permissions ${perm}`);
-          }
-          if (!message.member.hasPermission(perm)) {
-            invalidPerms.push(perm);
-          }
-        }
-        if (invalidPerms.length) {
-          return message.channel.send(`Missing Permissions: \`${invalidPerms}\``);
-        }
-      }
-
-      const now = Date.now();
-      const timestamps = cooldowns.get(command.name);
-      const cooldownAmount = (command.cooldown || 1) * 1000;
-
-      if (timestamps.has(message.author.id)) {
-        const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-
-        if (now < expirationTime) {
-          const timeLeft = (expirationTime - now) / 1000;
-          return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
-        }
-      }
-
-      timestamps.set(message.author.id, now);
-      setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-
-
-      try {
-        command.execute(message, args, client);
-      } catch (error) {
-        console.error(error);
-        const embed2 = new Discord.MessageEmbed()
-          .setColor('RED')
-          .setTitle('Oh no! An _error_ has appeared!')
-          .setDescription(`**Contact Bot Owner:** <@${config.bot.ownerID}>`)
-          .addFields({
-            name: '**Error Name:**',
-            value: `\`${error.name}\``
-          }, {
-            name: '**Error Message:**',
-            value: `\`${error.message}\``
-          }, {
-            name: '**Error Location:**',
-            value: `\`${error.stack}\``
-          }, {
-            name: '**Ways to Report:**',
-            value: '[Join My Support Server](https://discord.gg/tT3VEW8AYF), [Fill out this form](https://codinghelp.site/contact-us/) (Erin owns CodingHelp so that form goes directly to her), Message her on Discord, or Email her at me@dudethatserin.site\n\nPlease include all of the information in this embed (message) as well as any additional information you can think to provide. Screenshots are also VERY helpful. Thank you!'
-          }, )
-          .setTimestamp()
-          .setFooter(`Thanks for using ${client.user.tag}! I'm sorry you encountered this error!`, `${client.user.displayAvatarURL()}`)
-        message.channel.send(embed2);
+    // owner only
+    if (command.ownerOnly === 'yes') {
+      if (!message.author.id === config.developer.id) {
+        return message.reply('This is only a command Erin (DudeThatsErin#8061) can use. If you are seeing this in error use the `s.report` command.');
       }
     }
 
-  }
+    // patreon only
+    const results = await connection.query(
+      `SELECT * from Patrons;`,
+      [message.guild.id]
+    );
+    const guilds = results[0][0].guildId;
 
+    if (command.patreonOnly === 'yes') {
+      if (!message.guild.id === guilds) {
+        return message.reply(`Only patrons have access to \`${prefix}${command}\`. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon`)
+      }
+    }
+
+    // command cooldowns
+    if (!cooldowns.has(command.name)) {
+      cooldowns.set(command.name, new Discord.Collection());
+    }
+
+    const now = Date.now();
+    const timestamps = cooldowns.get(command.name);
+    const cooldownAmount = (command.cooldown || 1) * 1000;
+
+    if (timestamps.has(message.author.id)) {
+      const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+      if (now < expirationTime) {
+        const timeLeft = (expirationTime - now) / 1000;
+        return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+      }
+    }
+
+    timestamps.set(message.author.id, now);
+    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+    // actually running the commands.
+    try {
+      command.execute(message, args, client);
+    } catch (error) {
+      console.error(error);
+      const embed = new Discord.MessageEmbed()
+        .setColor('RED')
+        .setTitle('Oh no! An _error_ has appeared!')
+        .setDescription(`**Contact Bot Owner:** <@${config.botOwnerID}>`)
+        .addFields({
+          name: '**Error Name:**',
+          value: `\`${error.name}\``
+        }, {
+          name: '**Error Message:**',
+          value: `\`${error.message}\``
+        }, {
+          name: '**Error Location:**',
+          value: `\`${error.stack}\``
+        }, {
+          name: '**Ways to Report:**',
+          value: '[Join My Support Server](https://discord.gg/tT3VEW8AYF), [Fill out this form](https://codinghelp.site/contact-us/) (Erin owns CodingHelp so that form goes directly to her), Message her on Discord, or Email her at me@dudethatserin.site\n\nPlease include all of the information in this embed (message) as well as any additional information you can think to provide. Screenshots are also VERY helpful. Thank you!'
+        })
+        .setTimestamp()
+        .setFooter(`Thanks for using ${client.user.tag}! I'm sorry you encountered this error!`, `${client.user.displayAvatarURL()}`)
+      message.channel.send(embed);
+    }
+    /* ---------------------------------------------
+    REGULAR COMMANDS / THANKS SYSTEM OFF
+    ------------------------------------------------
+    */
+  } else {
+    //get prefix
+    const prefix = client.guildCommandPrefixes.get(message.guild.id);
+    if (!message.content.startsWith(prefix)) return;
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+    const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    if (!command) return message.channel.send('That command does not exist. Run \`s.help\` to see all of my commands.');
+    console.log(command); //works
+
+    // owner only
+    if (command.ownerOnly === 'yes') {
+      if (!message.author.id === config.developer.id) {
+        return message.reply('This is only a command Erin (DudeThatsErin#8061) can use. If you are seeing this in error use the `s.report` command.');
+      }
+    }
+
+    // patreon only
+    const results = await connection.query(
+      `SELECT * from Patrons;`,
+      [message.guild.id]
+    );
+    const guilds = results[0][0].guildId;
+
+    if (command.patreonOnly === 'yes') {
+      if (!message.guild.id === guilds) {
+        return message.reply(`Only patrons have access to \`${prefix}${command}\`. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon`)
+      }
+    }
+
+    // command cooldowns
+    if (!cooldowns.has(command.name)) {
+      cooldowns.set(command.name, new Discord.Collection());
+    }
+
+    const now = Date.now();
+    const timestamps = cooldowns.get(command.name);
+    const cooldownAmount = (command.cooldown || 1) * 1000;
+
+    if (timestamps.has(message.author.id)) {
+      const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+      if (now < expirationTime) {
+        const timeLeft = (expirationTime - now) / 1000;
+        return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+      }
+    }
+
+    timestamps.set(message.author.id, now);
+    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+    // actually running the commands.
+    try {
+      command.execute(message, args, client);
+    } catch (error) {
+      console.error(error);
+      const embed = new Discord.MessageEmbed()
+        .setColor('RED')
+        .setTitle('Oh no! An _error_ has appeared!')
+        .setDescription(`**Contact Bot Owner:** <@${config.botOwnerID}>`)
+        .addFields({
+          name: '**Error Name:**',
+          value: `\`${error.name}\``
+        }, {
+          name: '**Error Message:**',
+          value: `\`${error.message}\``
+        }, {
+          name: '**Error Location:**',
+          value: `\`${error.stack}\``
+        }, {
+          name: '**Ways to Report:**',
+          value: '[Join My Support Server](https://discord.gg/tT3VEW8AYF), [Fill out this form](https://codinghelp.site/contact-us/) (Erin owns CodingHelp so that form goes directly to her), Message her on Discord, or Email her at me@dudethatserin.site\n\nPlease include all of the information in this embed (message) as well as any additional information you can think to provide. Screenshots are also VERY helpful. Thank you!'
+        })
+        .setTimestamp()
+        .setFooter(`Thanks for using ${client.user.tag}! I'm sorry you encountered this error!`, `${client.user.displayAvatarURL()}`)
+      message.channel.send(embed);
+    }
+  }
 }); // end client.on message
 
 client.on("disconnect", () => client.logger.warn("Bot is disconnecting..."));

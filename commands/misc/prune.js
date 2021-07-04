@@ -7,7 +7,8 @@ module.exports = {
     usage: 's.prune [number 2-99]',
     example: 's.prune 49',
     inHelp: 'yes',
-    permissions: ['MANAGE_MESSAGES'],
+    userPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'MANAGE_MESSAGES'],
+    botPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'MANAGE_MESSAGES'],
     execute(message, args) {
 
         const amount = parseInt(args[0]);

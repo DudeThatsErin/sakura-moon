@@ -9,14 +9,10 @@ module.exports = {
     example: 's.leaderboard or s.ldb or s.lbd',
     inHelp: 'yes',
     permissions: '',
-    note: 'In order for users to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon).',
-    async execute (message, args) {
+    note: '',
+    patreonOnly: 'yes',
+    async execute(message, args) {
 
-      const result0 = await connection.query(
-        `SELECT * from Patrons WHERE guildId = ?;`,
-        [message.guild.id]
-    );
-      if(result0[0][0] === undefined || result0[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         let guild = message.guild.id;
         let author = message.author.id;
         let aUsername = message.author.username;
@@ -37,31 +33,40 @@ module.exports = {
         for (let i = 0; i < top10[0].length; i++) {
             const data = top10[0];
             const user = top10[0][i].author;
-            let membr = await message.client.users.fetch(user).catch(err => {console.log(err);});
+            let membr = await message.client.users.fetch(user).catch(err => {
+                console.log(err);
+            });
             let username = membr.username;
 
             userNames += `${i + 1}. ${username}\n`;
             points += `${data[i].total}\n`;
         }
-        
-        if(top10 === undefined || top10[0] === undefined || top10[0][0] === undefined) {
+
+        if (top10 === undefined || top10[0] === undefined || top10[0][0] === undefined) {
             message.channel.send('No one is on the leaderboard yet.');
-        } else if(results === undefined || results[0] === undefined || results[0][0] === undefined) {
+        } else if (results === undefined || results[0] === undefined || results[0][0] === undefined) {
 
-        
+
             let embed2 = new Discord.MessageEmbed()
-            .setTitle('This is the current challenge leaderboard.')
-            .setColor('#c9ca66')
-            .addFields(
-                {name: `Top 10`, value: userNames, inline: true},
-                {name: 'Points', value: points, inline: true},
-                {name: 'How many points do you have?', value: `${aUsername}, you currently have \`0\` point(s).`}
-            )
-            .setFooter('If there is an error here, please report this!');
+                .setTitle('This is the current challenge leaderboard.')
+                .setColor('#c9ca66')
+                .addFields({
+                    name: `Top 10`,
+                    value: userNames,
+                    inline: true
+                }, {
+                    name: 'Points',
+                    value: points,
+                    inline: true
+                }, {
+                    name: 'How many points do you have?',
+                    value: `${aUsername}, you currently have \`0\` point(s).`
+                })
+                .setFooter('If there is an error here, please report this!');
 
-    message.channel.send(embed2);
+            message.channel.send(embed2);
 
-         } else {
+        } else {
             const ponts = await (await connection).query(
                 `SELECT points, SUM(CAST(points AS UNSIGNED)) AS total FROM Submissions WHERE guildId = ? AND author = ?;`,
                 [guild, author]
@@ -70,14 +75,21 @@ module.exports = {
             let embed2 = new Discord.MessageEmbed()
                 .setTitle('This is the current challenge leaderboard.')
                 .setColor('#c9ca66')
-                .addFields(
-                    {name: `Top 10`, value: userNames, inline: true},
-                    {name: 'Points', value: points, inline: true},
-                    {name: 'How many points do you have?', value: `${aUsername}, you currently have \`${p}\` point(s).`}
-                )
+                .addFields({
+                    name: `Top 10`,
+                    value: userNames,
+                    inline: true
+                }, {
+                    name: 'Points',
+                    value: points,
+                    inline: true
+                }, {
+                    name: 'How many points do you have?',
+                    value: `${aUsername}, you currently have \`${p}\` point(s).`
+                })
                 .setFooter('If there is an error here, please report this!');
 
-        message.channel.send(embed2);
-                }
+            message.channel.send(embed2);
+        }
     }
 }

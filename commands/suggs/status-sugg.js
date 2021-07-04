@@ -6,17 +6,13 @@ module.exports = {
     aliases: ['statuss', 'ss', 'ssugg', 'supsugg', 'hmsug'],
     inHelp: 'yes',
     description: 'Allows a user to check the current status of their suggestion.',
-    note: 'In order for users to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    note: '',
     usage: 's.statussugg messageID',
     example: 's.statussugg 847580954306543616',
     permissions: '',
+    patreonOnly: 'no',
     async execute(message, args) {
 
-        const results = await connection.query(
-            `SELECT * from Patrons WHERE guildId = ?;`,
-            [message.guild.id]
-        );
-        if (results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         const msgId = args[0];
         if (!msgId) return message.reply('Please give me the message ID you want to check the status of. Without that I can\'t help you.')
         const result = await (await connection).query(

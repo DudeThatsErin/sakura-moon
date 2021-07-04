@@ -7,8 +7,11 @@ module.exports = {
     usage: '[current prefix]reset-prefix',
     example: 's.reset-prefix\nThis will reset your prefix to \`s.\`',
     inHelp: 'yes',
-    permissions: 'ADMINISTRATOR',
-    async execute(message, args, client) { 
+    userPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'ADMINISTRATOR'],
+    botPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'ADMINISTRATOR'],
+    patreonOnly: 'no',
+    note: '',
+    async execute(message, args, client) {
 
         let newPrefix = 's.';
         console.log('oldPrefix: ' + newPrefix);

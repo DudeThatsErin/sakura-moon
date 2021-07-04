@@ -5,18 +5,14 @@ module.exports = {
     name: 'suggestions',
     aliases: ['suggest', 'suggestion', 'sugg', 's'],
     description: 'Creates a suggestion!',
-    note: 'In order for users to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    note: '',
     usage: 's.suggestions [suggestion here]',
     example: 's.suggestions I want pudding!',
     inHelp: 'yes',
     permissions: '',
+    patreonOnly: 'no',
     async execute(message, args) {
 
-        const results = await connection.query(
-            `SELECT * from Patrons WHERE guildId = ?;`,
-            [message.guild.id]
-        );
-        if (results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         const channel = message.guild.channels.cache.find(c => c.name === 'suggestions');
         if (!channel) {
             message.guild.channels.create('suggestions', {

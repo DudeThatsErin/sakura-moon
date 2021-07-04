@@ -1,19 +1,27 @@
-const { MessageEmbed } = require('discord.js');
+const {
+    MessageEmbed
+} = require('discord.js');
 
 module.exports = {
     name: 'warn',
-    description: 'Allows **mods** to warn users.\nMods are considered users with the `MANAGE_MESSAGES` permission..',
+    description: 'Allows **mods** to warn users for doing something wrong on their server.',
     aliases: ['warning'],
     usage: 's.warn @username or ID <reason>',
     example: 's.warn @DudeThatsErin Please stop using foul language. That is not allowed in our server. Thank you!',
     inHelp: 'yes',
-    permissions: 'MANAGE_MESSAGES',
-    async execute(message, args) { 
+    userPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'MANAGE_MESSAGES'],
+    botPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', ''],
+    patreonOnly: 'no',
+    note: '',
+    ownerOnly: '',
+    execute(message, args) {
+
         let user = message.guild.member(message.mentions.users.first() || message.guild.members.cache.get(args[0]));
         if (!user) return message.channel.send('❓Please enter a valid user!');
-        if (!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("❌You do not have permission for this command!");
+
         let reason = args.slice(1).join(' ');
         if (!reason) reason = "**No reason given**";
+
         let guild = message.guild.name;
         let author = message.author.username;
         let name = user.user.username;
@@ -35,4 +43,4 @@ module.exports = {
             .setFooter('If anything appears wrong here, please report it to the dev.');
         message.channel.send(embed);
     }
-  };
+};

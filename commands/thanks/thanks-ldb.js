@@ -10,15 +10,11 @@ module.exports = {
     example: 's.thanks-leaderboard or s.thxldb or s.txlbd',
     cooldown: 5,
     inHelp: 'yes',
-    note: 'In order for users to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    note: '',
     permissions: '',
-    async execute (message, args, client) {
+    patreonOnly: 'no',
+    async execute(message, args, client) {
 
-      const result0 = await connection.query(
-        `SELECT * from Patrons WHERE guildId = ?;`,
-        [message.guild.id]
-    );
-      if(result0[0][0] === undefined || result0[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         let guild = message.guild.id;
         let author = message.author.id;
         let aUsername = message.author.username;
@@ -47,26 +43,33 @@ module.exports = {
             points += `${data[i].total}\n`;
 
         }
-        
-        
-        if(top10 === undefined || top10[0] === undefined || top10[0][0] === undefined) {
+
+
+        if (top10 === undefined || top10[0] === undefined || top10[0][0] === undefined) {
             message.channel.send('No one is on the leaderboard yet.');
-        } else if(results === undefined || results[0] === undefined || results[0][0] === undefined) {
+        } else if (results === undefined || results[0] === undefined || results[0][0] === undefined) {
 
-        
+
             let embed2 = new Discord.MessageEmbed()
-            .setTitle('This is the current thanks leaderboard.')
-            .setColor('#AD66A0')
-            .addFields(
-                {name: `Top 10`, value: userNames, inline: true},
-                {name: 'Thanks', value: points, inline: true},
-                {name: 'How many thanks do you have?', value: `${aUsername}, you currently have \`0\` thank(s).`}
-            )
-            .setFooter('If there is an error here, please report this!');
+                .setTitle('This is the current thanks leaderboard.')
+                .setColor('#AD66A0')
+                .addFields({
+                    name: `Top 10`,
+                    value: userNames,
+                    inline: true
+                }, {
+                    name: 'Thanks',
+                    value: points,
+                    inline: true
+                }, {
+                    name: 'How many thanks do you have?',
+                    value: `${aUsername}, you currently have \`0\` thank(s).`
+                })
+                .setFooter('If there is an error here, please report this!');
 
-    message.channel.send(embed2);
+            message.channel.send(embed2);
 
-         } else {
+        } else {
             const ponts = await (await connection).query(
                 `SELECT thanks, SUM(CAST(thanks AS UNSIGNED)) AS total FROM Thanks WHERE guildId = ? AND userId = ?;`,
                 [guild, author]
@@ -75,14 +78,21 @@ module.exports = {
             let embed2 = new Discord.MessageEmbed()
                 .setTitle('This is the current thanks leaderboard.')
                 .setColor('#c9ca66')
-                .addFields(
-                    {name: `Top 10`, value: userNames, inline: true},
-                    {name: 'Thanks', value: points, inline: true},
-                    {name: 'How many thanks do you have?', value: `${aUsername}, you currently have \`${p}\` thank(s).`}
-                )
+                .addFields({
+                    name: `Top 10`,
+                    value: userNames,
+                    inline: true
+                }, {
+                    name: 'Thanks',
+                    value: points,
+                    inline: true
+                }, {
+                    name: 'How many thanks do you have?',
+                    value: `${aUsername}, you currently have \`${p}\` thank(s).`
+                })
                 .setFooter('If there is an error here, please report this!');
 
-        message.channel.send(embed2);
-                }
+            message.channel.send(embed2);
+        }
     }
 }

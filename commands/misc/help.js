@@ -10,7 +10,8 @@ module.exports = {
 	usage: `s.help`,
 	inHelp: 'yes',
 	example: `s.help or s.h or s.halp`,
-	permissions: '',
+	userPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS'],
+	botPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS'],
 	async execute(msg, args, client) {
 		let prefix = client.guildCommandPrefixes.get(msg.guild.id);
 		console.log(prefix)
@@ -21,12 +22,21 @@ module.exports = {
 			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields({
 				name: 'These are commands any user can use.',
-				value: '```css\nping\navatar\nuser-info\nserver-info\nbot-info\ninvite\nhelp\nreport\nstatusreport```'
-			}, );
+				value: '```css\nping\navatar\nuser-info\nserver-info\npatreon\nbot-info\ninvite\nhelp\nreport\nstatusreport```'
+			});
 
 		const embed2 = new MessageEmbed()
 			.setColor('#6683AD')
-			.setTitle('Help Menu page 2 - Suggestion System Commands')
+			.setTitle('Help Menu page 2 - Moderator Only Commands')
+			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
+			.addFields({
+				name: 'These are general **moderator** only commands. Meaning only **moderators** can use these commands.',
+				value: '```css\nprune\nupdate-prefix\nreset-prefix\nmute\nunmute\nwarn\nkick\nban\nunban\nreport\nstatusreport\ndm```'
+			});
+
+		const embed3 = new MessageEmbed()
+			.setColor('#6683AD')
+			.setTitle('Help Menu page 3 - Suggestion System Commands')
 			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields({
 				name: 'These are commands any user can use for our Suggestions System.',
@@ -34,18 +44,6 @@ module.exports = {
 			}, {
 				name: 'These are our **moderator** only commands for our Suggestions System.',
 				value: '```css\nprog-sugg\ndenied-sugg\ncompletedsugg\n```'
-			});
-
-		const embed3 = new MessageEmbed()
-			.setColor('#6683AD')
-			.setTitle('Help Menu page 3 - Challenge System Commands')
-			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
-			.addFields({
-				name: 'These are commands any user can use for our Challenge System.',
-				value: '```css\nsubmit\nedit-submission\nchallenge-leaderboard\n```'
-			}, {
-				name: 'These are our **moderator** only commands for our Challenge System.',
-				value: '```css\nadd-members\nadd-users\ncheck-participants\nremove-participant\nstart-challenge\nchallenge\nedit-challenge\ncheck-submissions\nreviewed\npurge-submissions\nend-challenge\n```'
 			});
 
 		const embed4 = new MessageEmbed()
@@ -59,11 +57,14 @@ module.exports = {
 
 		const embed5 = new MessageEmbed()
 			.setColor('#6683AD')
-			.setTitle('Help Menu page 5 - Moderator Only Commands')
+			.setTitle('Help Menu page 5 - Challenge System Commands')
 			.setDescription(`These are all of the commands Sakura Moon can do. If you want to get more information you can do \`${prefix}help <command>\`. Clicking the emojies at the bottom of this message will allow you to go through all of our commands.`)
 			.addFields({
-				name: 'These are general **moderator** only commands. Meaning only **moderators** can use these commands.',
-				value: '```css\nprune\nupdate-prefix\nreset-prefix\nmute\nunmute\nwarn\nkick\nban\nunban\nreport\nstatusreport```'
+				name: 'These are commands any user can use for our Challenge System.',
+				value: '```css\nsubmit\nedit-submission\nchallenge-leaderboard\n```'
+			}, {
+				name: 'These are our **moderator** only commands for our Challenge System.',
+				value: '```css\nadd-members\nadd-users\ncheck-participants\nremove-participant\nstart-challenge\nchallenge\nedit-challenge\ncheck-submissions\nreviewed\npurge-submissions\nend-challenge\n```'
 			});
 
 		pages = [
@@ -110,8 +111,14 @@ module.exports = {
 			if (cmd.ownerOnly) {
 				emb.addField("THIS IS ONLY A COMMAND ERIN CAN USE. Right?", cmd.ownerOnly, false)
 			}
-			if (cmd.permissions) {
-				emb.addField("You must have these permissions to run this command:", cmd.permissions, false)
+			if (cmd.userPerms) {
+				emb.addField("You must have these permissions to run this command:", cmd.userPerms, false)
+			}
+			if (cmd.botPerms) {
+				emb.addField('I must have these permissions to run this command:', cmd.botPerms, false)
+			}
+			if (cmd.patreonOnly) {
+				emb.addField('Do you need to subscribe to Sakura Moon on Patreon to use this command?', cmd.patreonOnly, false)
 			}
 			msg.channel.send(emb);
 

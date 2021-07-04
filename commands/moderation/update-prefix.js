@@ -5,10 +5,13 @@ module.exports = {
     description: 'Allows **guild owner** to change the bot\'s prefix.',
     aliases: ['upprefix', 'uprefix', 'updateprefix', 'changeprefix', 'change-prefix'],
     usage: '[current prefix]update-prefix [new prefix]',
-    example: 's.update-prefix !\nThis will update your prefix to \`!\`.\n**Note:** This *only* changes how commands are used, not how they are displayed within the \`s.help\` command!',
+    example: 's.update-prefix !\nThis will update your prefix to \`!\`.',
     inHelp: 'yes',
-    permissions: 'ADMINISTRATOR',
-    async execute(message, args, client) { 
+    userPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'ADMINISTRATOR'],
+    botPerms: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY', 'ADD_REACTIONS', 'ADMINISTRATOR'],
+    patreonOnly: 'no',
+    note: '',
+    async execute(message, args, client) {
 
         let newPrefix = args[0];
         if (message.member.id === message.guild.ownerID) {

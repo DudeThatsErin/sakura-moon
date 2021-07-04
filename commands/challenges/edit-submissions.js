@@ -9,15 +9,10 @@ module.exports = {
     usage: 's.edit-submission [message ID] [new answer]',
     example: 's.edit-submission 841302144727646269 I like pudding!',
     inHelp: 'yes',
-    permissions: '',
-    note: 'In order for users to use this command, someone from the Guild needs to support Sakura Moon on [Patreon](https://www.patreon.com/SakuraMoon).',
+    note: '',
+    permissions: [''],
+    patreonOnly: 'yes',
     async execute(message, args) {
-
-        const result0 = await connection.query(
-            `SELECT * from Patrons WHERE guildId = ?;`,
-            [message.guild.id]
-        );
-        if (result0[0][0] === undefined || result0[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
 
         let msgId = args[0];
         let title = args.slice(1).join(' ');
@@ -63,6 +58,7 @@ module.exports = {
                         .setDescription(`I have updated your submission to:\n${newAnswer}\n\nYour new message ID is:\n\`${msg}\``)
                         .setFooter('If there is a problem with this, please report it!');
 
+                    message.react('✅');
                     message.client.users.cache.get(`${au}`).send(embed);
                     message.delete();
                 });

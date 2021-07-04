@@ -10,14 +10,9 @@ module.exports = {
     inHelp: 'yes',
     example: 's.editsugg 847580954306543616 I need to update my suggestion!',
     permissions: '',
-    note: 'Only the original poster\'s of the suggestion can edit the message. Meaning someone posts a suggestion and only that person can edit the suggestion, no one else.\nIn order for mods to be able to use this command, someone from the guild has to support the bot on [Patreon](https://www.patreon.com/SakuraMoon).',
+    patreonOnly: 'no',
+    note: 'Only the original poster\'s of the suggestion can edit the message. Meaning someone posts a suggestion and only that person can edit the suggestion, no one else.',
     async execute(message, args) {
-
-      const results = await connection.query(
-        `SELECT * from Patrons WHERE guildId = ?;`,
-        [message.guild.id]
-    );
-      if(results[0][0] === undefined || results[0][0] === 'undefined') return message.reply('Only patrons have access to use the Challenge System. If you would like to become a patron, check here on Patreon: https://www.patreon.com/SakuraMoon');
         const msgId = args[0];
         const result = await (await connection).query(
             `SELECT noSugg from Suggs WHERE noSugg = ?;`,
@@ -44,7 +39,7 @@ module.exports = {
         const avatar = result4[0][0].Avatar;
 
         const stats = args.slice(1).join(' ');
-        if(!stats) return message.channel.send('You need to include the updated suggestion as well as the message ID.');
+        if (!stats) return message.channel.send('You need to include the updated suggestion as well as the message ID.');
 
         const update = 'OP Updated their own suggestion.';
 
@@ -58,19 +53,22 @@ module.exports = {
             [msgId]
         );
         const upStatus = result8[0][0].Message;
-        
+
         const edited = new Discord.MessageEmbed()
             .setColor('1C3D77')
             .setAuthor(`${author}`, `${avatar}`)
             .setDescription('Your suggestion has been updated!')
-            .addFields(
-                { name: 'Your old suggestion:', value: `${suggestion}`},
-                { name: 'Your new suggestion:', value: `${upStatus}`},
-            )
+            .addFields({
+                name: 'Your old suggestion:',
+                value: `${suggestion}`
+            }, {
+                name: 'Your new suggestion:',
+                value: `${upStatus}`
+            }, )
             .setTimestamp()
             .setFooter('If you do\'t understand this reason, please contact the moderator that updated your suggestion. Thank you!');
-            message.author.send(edited);
-            message.delete()
+        message.author.send(edited);
+        message.delete()
 
         const editedTwo = new Discord.MessageEmbed()
             .setColor('004d4d')
@@ -78,11 +76,10 @@ module.exports = {
             .setDescription(`${upStatus}`)
             .setFooter('If you are interested in submitting a suggestion please use: ++suggestion');
 
-            const channel = message.guild.channels.cache.find(c => c.name === 'suggestions');
-            channel.messages.fetch(mId).then(message => {
-                    if(message) message.edit(editedTwo);
-                }
-            )
+        const channel = message.guild.channels.cache.find(c => c.name === 'suggestions');
+        channel.messages.fetch(mId).then(message => {
+            if (message) message.edit(editedTwo);
+        })
 
     }
 
