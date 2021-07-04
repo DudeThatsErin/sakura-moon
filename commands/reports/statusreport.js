@@ -26,6 +26,7 @@ module.exports = {
             const guildName = guilds.name;
             const OG = results[0][0].authorId;
             const author = client.users.cache.find(user => user.id === `${OG}`);
+            let usr = message.guild.members.cache.get(author);
             const authorUsername = author.username;
             const original = results[0][0].description;
             const avatar = results[0][0].avatar;
@@ -34,7 +35,7 @@ module.exports = {
             const status = results[0][0].stat || 'I have not started working on it yet. I will get to it as soon as I can. Thank you!';
 
             let report = new Discord.MessageEmbed()
-                .setColor('#5241CE')
+                .setColor('#B3B6B7')
                 .setTitle(`This is the current status of your bug report...`)
                 .setAuthor(`${authorUsername}`, `${avatar}`)
                 .setThumbnail(`${avatar}`)
@@ -55,9 +56,9 @@ module.exports = {
                     name: 'Message Author ID:',
                     value: `\`${OG}\``
                 })
-                .setFooter('If you don\'t understand this status, please contact the dev on our support server.', 'https://codinghelp.site/bots/sm/neon-moon.jpg')
+                .setFooter('If you don\'t understand this status, please contact the dev on our support server.', config.bot.avatar)
 
-            message.channel.send(report)
+            usr.send(report)
         }
 
     }

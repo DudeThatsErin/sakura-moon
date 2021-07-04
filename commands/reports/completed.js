@@ -12,14 +12,13 @@ module.exports = {
     permissions: '',
     ownerOnly: 'yes',
     async execute(message, args, client) {
-        let mod = message.author.id;
-        let modName = message.author.username;
+
         let description = args.slice(1).join(' ');
         if (!description) {
             message.reply('Please include the status Erin, sheesh.')
             return;
         }
-        const channel = client.channels.cache.find(channel => channel.id === '852185561400999986');
+        const channel = client.channels.cache.find(channel => channel.id === config.bot.reportsChId);
 
         let messageId = args[0];
         if (messageId < 0) {
@@ -40,7 +39,7 @@ module.exports = {
             const avatar = results[0][0].avatar;
 
             let report = new Discord.MessageEmbed()
-                .setColor('#5241CE')
+                .setColor('#27AE60')
                 .setTitle(`The bug report has been completed!`)
                 .setAuthor(`${authorUsername}`, `${avatar}`)
                 .setDescription(`This is the original report:\n\n${original}\n\n--------------------\n\nThis is the current status:\n\n${description}\n\n--------------------`)
@@ -60,7 +59,7 @@ module.exports = {
                     name: 'Message Author ID:',
                     value: `\`${OG}\``
                 })
-                .setFooter('If this is incorrect please report this!', 'https://codinghelp.site/bots/sm/neon-moon.jpg')
+                .setFooter('If this is incorrect please report this!', config.bot.avatar)
 
             channel.messages.fetch(messageId).then(message => {
                 if (message) message.delete();
