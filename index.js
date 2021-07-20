@@ -14,9 +14,7 @@ const client = new Discord.Client();
 const config = require('./config.json');
 const GhostPing = require('discord.js-ghost-ping');
 client.cooldowns = new Discord.Collection();
-const {
-  cooldowns
-} = client;
+const { cooldowns } = client;
 const connection = require('./database.js');
 client.guildCommandPrefixes = new Discord.Collection();
 
