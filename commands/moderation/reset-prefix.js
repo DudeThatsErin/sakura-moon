@@ -14,7 +14,6 @@ module.exports = {
     async execute(message, args, client) {
 
         let newPrefix = 's.';
-        console.log('oldPrefix: ' + newPrefix);
         if (message.member.id === message.guild.ownerID) {
             (await connection).query( //works
                 `UPDATE Guilds SET prefix = ? WHERE guildId = ?;`,
@@ -22,7 +21,6 @@ module.exports = {
             );
             message.reply(`I have reset your bot's prefix. Your prefix is now \`${newPrefix}\``); // says this
             client.guildCommandPrefixes.set(message.guild.id, newPrefix); //does not work
-            console.log(client.guildCommandPrefixes.get(message.guild.id));
         } else {
             message.reply('Only **guild owners** can run this command.');
             return;
