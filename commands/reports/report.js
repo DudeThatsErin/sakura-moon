@@ -24,7 +24,7 @@ module.exports = {
             dynamic: true
         });
 
-        const url = 'no' || message.attachments.first().url;
+        const url = (message.attachments.first()?.url || 'no');
 
         let report2 = new Discord.MessageEmbed()
             .setColor('#2980B9')
