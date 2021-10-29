@@ -1,24 +1,26 @@
 const connection = require('../../database.js');
 
+
 module.exports = {
     name: 'purge-submissions',
-    description: 'This gives **mods** the ability to purge all submissions from the submissions database.',
+    description: 'This gives **mods** the ability to purge all submissions from the submissions database. *Note:* This does *not* delete them from the channel within discord.',
     aliases: ['purges', 'psubmissions', 'psubs', 'purgesubs', 'deletesubs', 'delete-subs'],
-    usage: 's.purge-submissions',
-    example: 's.purge-submissions',
+    usage: '++purge-submissions',
+    example: '++purge-submissions',
     inHelp: 'yes',
-    note: 'You must have one of the following permissions to run this command: \`ADMINISTRATOR, MANAGE_CHANNELS, MANAGE_ROLES, MANAGE_MESSAGES, KICK_MEMBERS, BAN_MEMBERS\`',
-    permissions: ['ADMINISTRATOR', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
-    patreonOnly: 'yes',
-    async execute(message, args) {
-
-        await (await connection).query(
-            `DELETE FROM Submissions WHERE guildId = ?;`,
-            [message.guild.id]
-        );
+    challengeMods: 'yes',
+    modOnly: 'yes',
+    userPerms: [''],
+    botPerms: [''],
+    async execute (message, args) {
+            
+            connection.query(
+                `DELETE FROM Submissions WHERE guildId = ?;`,
+                [message.guild.id]
+            );
         message.react('✅');
-        message.reply('I have deleted all of the submissions from the submissions database. If you would like to remove them from the Discord Channel, you can run \`s.purge [number 2-100]\` in that channel.');
 
 
+        
     }
 }
