@@ -1,3 +1,5 @@
+const config = require('../config/config.json');
+
 module.exports = {
     name: 'ready',
     once: true,
@@ -10,6 +12,7 @@ module.exports = {
         console.log('          Error Logs...             ')
         console.log('|-----------------------------------|')
 
-        client.user.setPresence({ activities: [{ name: 'Use ++ prefix' }] });
+        client.user.setPresence({ activities: [{ name: 'Use s. prefix' }] });
+
     }
 }

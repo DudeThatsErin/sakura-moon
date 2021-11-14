@@ -1,16 +1,16 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
 
-
 module.exports = {
     name: 'user-check-submissions',
     description: 'This allows users to check see what submissions that they have made and provides them with their message ID.',
     aliases: ['ucs', 'ucksubs', 'uck-subs', 'userchecksubmissions'],
-    usage: '++user-check-submissions',
-    example: '++user-check-submissions',
+    usage: 's.user-check-submissions',
+    example: 's.user-check-submissions',
     inHelp: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    timeout: 400,
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
     async execute (message, args) {
         let name = message.author.id;
 
@@ -44,8 +44,10 @@ module.exports = {
 
             if(moderator === '0') {
                 message.client.users.cache.get(`${name}`).send({ embeds: [notDefined] });
+                message.react('✅');
             } else {
                 message.client.users.cache.get(`${name}`).send({ embeds: [defined] });
+                message.react('✅');
             }
         }
     }

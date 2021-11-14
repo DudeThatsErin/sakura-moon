@@ -1,0 +1,21 @@
+{
+    "good_color": "#00d100",
+    "bad_color": "#a80000",
+    "error": "BD0707",
+    "impmsg_color": "#52ffff",
+    "rand_color": "#00002e",
+    "sub_status": "#24ffff",
+    "server_status": "#00ad00",
+    "bot_status": "#800080",
+    "dm_color": "#d60000",
+    "format": "#ffb224",
+    "modEmbed": "#7FB3D5",
+    "start_ch": "#A8E0B1",
+    "newchQ": "#A8E0CE",
+    "sugg": "#F1D1EC",
+    "upSugg": "#F1D1DE",
+    "deniedSugg": "#9E7B7B",
+    "compSugg": "#D7BDE2",
+    "footertext": "Thanks for using Sakura Moon!",
+    "footericon": "https://codinghelp.site/bots/sm/neon-moon.jpg"
+}

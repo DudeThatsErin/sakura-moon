@@ -1,18 +1,15 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
 
-
 module.exports = {
     name: 'mod-check-submissions',
     description: 'This allows **mods** to check who has submitted a response.',
     aliases: ['mcs', 'mcksubs', 'mck-subs', 'modchecksubmissions'],
-    usage: '++mod-check-submissions [challenge number]',
-    example: '++mod-check-submissions 1',
+    usage: 's.mod-check-submissions [challenge number]',
+    example: 's.mod-check-submissions 1',
     inHelp: 'yes',
-    challengeMods: 'yes',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     async execute (message, args) {
         let name = message.author.id;
         let challengeNo = args[0];

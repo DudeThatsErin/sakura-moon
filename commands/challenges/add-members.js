@@ -1,18 +1,15 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
 
-
 module.exports = {
     name: 'add-members',
     description: 'This allows **mods** to automatically add participants to the Challenges database.',
     aliases: ['addppl', 'addparticipants', 'addchallengers', 'ap', 'add-participants'],
-    usage: '++add-members',
+    usage: 's.add-members',
     inHelp: 'yes',
-    example: '++add-members',
-    challengeMods: 'yes',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    example: 's.add-members',
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_ROLES', 'MANAGE_NICKNAMES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_CHANNELS'],
     async execute (message, args) {
 
             let joinersRole = message.guild.roles.cache.find(r => r.name === "Participants") || "none";
@@ -26,7 +23,7 @@ module.exports = {
                 for (var i = 0; i < Memberslength; i++) {
                     const members = Members[i];
                     await connection.query(
-                        `INSERT INTO Challenges (guildId, player) VALUES (?, ?);`,
+                        `INSERT INTO chPlayers (guildId, player) VALUES (?, ?);`,
                         [message.guild.id, members]
                     );
                 }

@@ -5,12 +5,11 @@ module.exports = {
     name: 'remove-submissions',
     description: 'This allows **mods** to remove responses to challenges.',
     aliases: ['rs', 'rmsubs', 'rm-subs', 'removesubmissions', 'removesubmission', 'rmsub'],
-    usage: '++remove-submissions [message ID]',
-    example: '++remove-submissions 841301824115965952',
+    usage: 's.remove-submissions [message ID]',
+    example: 's.remove-submissions 841301824115965952',
     inHelp: 'yes',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     challengeMods: 'yes',
     async execute (message, args) {
         let name = message.author.id;
@@ -23,8 +22,8 @@ module.exports = {
                 return;
             } else {
                 const results = await connection.query(
-                    `SELECT * FROM Submissions WHERE msgId = ? AND guildId = ?;`,
-                    [submission, message.guild.id]
+                    `SELECT * FROM Submissions WHERE msgId = ?;`,
+                    [submission]
                 )
                     const player = results[0][0].author;
                     const user = await message.client.users.fetch(player).catch(err => {console.log(err);});
@@ -41,8 +40,8 @@ module.exports = {
                 message.channel.send({ embeds: [embed] });
 
                         await connection.query(
-                            `DELETE FROM Submissions WHERE msgId = ? AND guildId = ?;`,
-                            [submission, message.guild.id]
+                            `DELETE FROM Submissions WHERE msgId = ?;`,
+                            [submission]
                         );
                 }
                 }

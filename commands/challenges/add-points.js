@@ -1,14 +1,13 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
 
-
 module.exports = {
     name: 'add-points',
     description: 'This allows **mods** to automatically add points to a participant\'s challenge to the Challenges database.',
     aliases: ['addpnts', 'pluspnts', 'addpoints', 'apnts', 'pluspoints'],
-    usage: '++add-points <message ID> <number of points>',
+    usage: 's.add-points <message ID> <number of points>',
     inHelp: 'yes',
-    example: '++add-points 850726247050903562 3',
+    example: 's.add-points 850726247050903562 3',
     challengeMods: 'yes',
     modOnly: 'yes',
     userPerms: [''],

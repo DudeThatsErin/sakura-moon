@@ -6,13 +6,12 @@ module.exports = {
     name: 'reviewed',
     description: 'This gives **mods** the ability to review submissions.',
     aliases: ['mark', 'review'],
-    usage: '++reviewed [challenge number] <number of points> [message ID]',
-    example: '++reviewed 1 1 841143871689064448',
+    usage: 's.reviewed [challenge number] <number of points> [message ID]',
+    example: 's.reviewed 1 1 841143871689064448',
     inHelp: 'yes',
-    userPerms: [''],
-    botPerms: [''],
-    modOnly: 'yes',
-    challengeMods: 'yes',
+    timeout: 100,
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     async execute (message, args) {
                 let challengeNo = args[0];
                 let points = args[1];
@@ -35,12 +34,12 @@ module.exports = {
                             return;
                         } else {
                             connection.query(
-                                `UPDATE Submissions SET moderator = ? WHERE msgId = ? AND guildId = ?;`,
-                                [moderator, msgId, message.guild.id]
+                                `UPDATE Submissions SET moderator = ? WHERE msgId = ?;`,
+                                [moderator, msgId]
                             );
                             const result = await connection.query(
-                                `SELECT author FROM Submissions WHERE msgId = ? AND guildId = ?;`,
-                                [msgId, message.guild.id]
+                                `SELECT author FROM Submissions WHERE msgId = ?;`,
+                                [msgId]
                             );
                             let user = result[0][0].author;
                             const Author = message.client.users.cache.get(user);

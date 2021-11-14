@@ -1,18 +1,17 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
-
+const embd = require('../../config/embed.json');
 
 module.exports = {
     name: 'challenge',
     description: 'This command allows **mods** to add additional challenge questions to the Challenge System.',
     aliases: ['new-challenge', 'chall', 'c'],
-    usage: '++challenge [challenge number] [question]',
+    usage: 's.challenge [challenge number] [question]',
     inHelp: 'yes',
-    example: '++challenge 1 What is my favorite color?',
-    challengeMods: 'yes',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    cooldown: 1000,
+    example: 's.challenge 1 What is my favorite color?',
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_ROLES', 'MANAGE_NICKNAMES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_CHANNELS'],
     async execute (message, args) {
 
         let msgId = message.id;
@@ -26,14 +25,15 @@ module.exports = {
             [guildId]
         );
         const announcementsChannel = result[0][0].channelD;
-
+        if (result === undefined) return message.channel.send('The challenge has not started yet. Please start the challenge first before running this.');
+        const participants = result[0][0].partRoleiD;
 
         if (!challengeNo) {
                 const challenge = await connection.query(
-                    `SELECT * FROM Challenge WHERE guildId = ? ORDER BY challengeNo DESC LIMIT 1;`,
+                    `SELECT * FROM ChallengeQ WHERE guildId = ? ORDER BY challengeNo DESC LIMIT 1;`,
                     [guildId]
                 );
-            const challengeNo = challenge[0][0].challengeNo;
+            const challengeNo = challenge[0][0].challengeNo || '\`0 zilch nada, there isn\'t a challenge in the database.\`';
             message.react('❓');
                 message.reply(`What challenge number are you trying to add to the database? The last challenge number in the database is ${challengeNo}.`);
                 return;
@@ -45,21 +45,21 @@ module.exports = {
             } else {
 
                 let embeD = new Discord.MessageEmbed()
-                    .setColor('BLUE')
+                    .setColor(embd.newchQ)
                     .setTitle(`Challenge ${challengeNo}`)
                     .setDescription(`${answer}`)
-                    .setFooter('Run the ++submit command to submit answers to this challenge.');
+                    .setFooter('Run the s.submit command to submit answers to this challenge.');
 
 
-                message.guild.channels.cache.get(announcementsChannel).send(`Hey, <@&850732454770901002> A new challenge is up!`, embeD).then(message => {
+                await message.guild.channels.cache.get(announcementsChannel).send({ content: `Hey, <@&${participants}> A new challenge is up!`, embeds: [embeD] }).then(message => {
                     const msg = message.id;
                     connection.query(
-                        `INSERT INTO Challenge (guildId, msgId, moderator, title, challengeNo) VALUES (?, ?, ?, ?, ?)`,
-                        [guildId, msg, moderator, answer, challengeNo]
+                        `INSERT INTO ChallengeQ (msgId, guildId, title, challengeNo, moderator) VALUES (?, ?, ?, ?, ?);`,
+                        [msg, guildId, answer, challengeNo, moderator]
                     );
                 });
                 const results = await connection.query(
-                    `SELECT * FROM Challenge WHERE guildId = ? AND challengeNo = ?;`,
+                    `SELECT * FROM ChallengeQ WHERE guildId = ? AND challengeNo = ?;`,
                     [guildId, challengeNo]
                 );
                 const res = results[0][0];

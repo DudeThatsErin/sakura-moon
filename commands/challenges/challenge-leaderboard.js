@@ -1,18 +1,15 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
 
-
 module.exports = {
     name: 'leaderboard',
     description: 'This gives users the ability to see the top 10 users on the leaderboard and also their position on the leaderboard.',
     aliases: ['ldbd', 'challenge-leaderboard', 'cleaderboard', 'cldbd', 'lbd', 'ldb'],
-    usage: '++leaderboard',
-    example: '++leaderboard or ++ldb or ++lbd',
+    usage: 's.leaderboard',
+    example: 's.leaderboard or s.ldb or s.lbd',
     inHelp: 'yes',
-    challengeMods: 'yes',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     async execute (message, args) {
         let guild = message.guild.id;
         let author = message.author.id;

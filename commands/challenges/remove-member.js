@@ -1,16 +1,15 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
+
 module.exports = {
     name: 'remove-user',
     description: 'This allows **mods** to manually remove users to the participants database.',
     aliases: ['remove-people', 'removeuser'],
-    usage: '++remove-user <tag user or ID>',
-    example: '++remove-user @DudeThatsErin',
+    usage: 's.remove-user <tag user or ID>',
+    example: 's.remove-user @DudeThatsErin',
     inHelp: 'yes',
-    challengeMods: 'yes',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: [''],
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     execute (message, args) {
  
 
