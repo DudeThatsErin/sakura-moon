@@ -8,12 +8,13 @@ module.exports = {
     usage: 's.remove-submissions [message ID]',
     example: 's.remove-submissions 841301824115965952',
     inHelp: 'yes',
+    timeout: '45000',
     userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     challengeMods: 'yes',
     async execute (message, args) {
         let name = message.author.id;
-        const modname = await message.client.users.fetch(name).catch(err => {console.log(err);});
+        const modname = client.users.cache.get(name) || await message.client.users.fetch(name).catch(err => {console.log(err);});
         let submission = args[0];
 
         if (!submission) {
@@ -26,7 +27,7 @@ module.exports = {
                     [submission]
                 )
                     const player = results[0][0].author;
-                    const user = await message.client.users.fetch(player).catch(err => {console.log(err);});
+                    const user = client.users.cache.get(player) || await message.client.users.fetch(player).catch(err => {console.log(err);});
                     const username = user.username;
                     const Submissions = results[0][0].message;
                     const dayNo = results[0][0].challengeNo;

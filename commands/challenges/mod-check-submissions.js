@@ -8,10 +8,14 @@ module.exports = {
     usage: 's.mod-check-submissions [challenge number]',
     example: 's.mod-check-submissions 1',
     inHelp: 'yes',
+    timeout: '25000',
+    chlMods: 1,
+    mods: 1,
     userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
-    async execute (message, args) {
-        let name = message.author.id;
+    async execute (message, args, client) {
+        let a = message.author.id;
+        let nameSend = client.users.cache.get(a) || await client.users.fetch(a).catch(() => { })
         let challengeNo = args[0];
 
         if (!challengeNo) {
@@ -20,7 +24,7 @@ module.exports = {
                 return;
             } else {
                 const result2 = await connection.query(
-                    `SELECT * FROM Challenge WHERE guildId = ? AND challengeNo = ?;`,
+                    `SELECT * FROM ChallengeQ WHERE guildId = ? AND challengeNo = ?;`,
                     [message.guild.id, challengeNo]
                 );
                 const number = result2[0][0].challengeNo;
@@ -31,7 +35,7 @@ module.exports = {
                     .setDescription(`${question}`)
                     .setFooter('If this is not right, please report it!');
                     message.channel.send(`📨 I have sent you a private message!`)
-                message.client.users.cache.get(`${name}`).send({ embeds: [embed] });
+                nameSend.send({ embeds: [embed] });
 
                 const result = await connection.query(
                     `SELECT * FROM Submissions WHERE guildId = ? AND challengeNo = ?;`,
@@ -40,34 +44,32 @@ module.exports = {
 
                 for (const row of result[0]){
                     const Members = row.author;
-                    const Author = await message.client.users.fetch(Members).catch(err => {console.log(err);});
+                    const Author = client.users.cache.get(Members) || await message.client.users.fetch(Members).catch(err => {console.log(err);});
                     const username = Author.username;
                     const Submissions = row.message || 'no message included with this submission.';
                     const dayNo = row.challengeNo;
-                    const moderator = row.moderator;
                     const msgId = row.msgId;
-                    const modname = await message.client.users.fetch(moderator).catch(err => { console.log(err); });
                     const attachment = row.file || 'no attachment included with this submission';
+                    const moderator = row.moderator;
                     
-                    
-                    // notDefined Embed
-                    const notDefined = new Discord.MessageEmbed()
-                        .setColor('#3e5366')
-                        .setTitle(`The submission by ${username} for Challenge ${dayNo} has not been reviewed yet.`)
-                        .setDescription(`Their submission is as follows:\n${Submissions}\n\nThey had this attachment:\n${attachment}\n\nTheir message ID is as follows: \`${msgId}\``)
-                        .setFooter('If there is a problem with this, please report this!');
-
-                    // Defined Embed
-                    const defined = new Discord.MessageEmbed()
-                        .setColor('#d4a066')
-                        .setTitle(`The submission by ${username} for Challenge ${dayNo} has been reviewed.`)
-                        .setDescription(`Their submission is as follows:\n${Submissions}\n\nThey had this attachment:\n${attachment}\n\nTheir message ID is as follows: \`${msgId}\`\n\nThe moderator that reviewed it was: ${modname}.`)
-                        .setFooter('If there is a problem with this, please report this!');
-
-                    if(moderator === '0') {
-                        message.client.users.cache.get(`${name}`).send({ embeds: [noDefined] });
+                    if (moderator === '0') {
+                        // notDefined Embed
+                        const notDefined = new Discord.MessageEmbed()
+                            .setColor('#3e5366')
+                            .setTitle(`The submission by ${username} for Challenge ${dayNo} has not been reviewed yet.`)
+                            .setDescription(`Their submission is as follows:\n${Submissions}\n\nThey had this attachment:\n${attachment}\n\nTheir message ID is as follows: \`${msgId}\``)
+                            .setFooter('If there is a problem with this, please report this!');
+                        nameSend.send({ embeds: [notDefined] });
                     } else {
-                        message.client.users.cache.get(`${name}`).send({ embeds: [defined] });
+                        
+                        const modname = await message.client.users.fetch(moderator).catch(err => { console.log(err); });
+                        // Defined Embed
+                        const defined = new Discord.MessageEmbed()
+                            .setColor('#d4a066')
+                            .setTitle(`The submission by ${username} for Challenge ${dayNo} has been reviewed.`)
+                            .setDescription(`Their submission is as follows:\n${Submissions}\n\nThey had this attachment:\n${attachment}\n\nTheir message ID is as follows: \`${msgId}\``)
+                            .setFooter('If there is a problem with this, please report this!');
+                        nameSend.send({ embeds: [defined] });
                     }
                   }
                 }

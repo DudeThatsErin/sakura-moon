@@ -7,11 +7,14 @@ module.exports = {
     aliases: ['cp', 'contestants', 'challenge-users', 'check-users', 'checkplayers', 'check-players', 'players', 'checkusers', 'challengeusers'],
     usage: 's.check-participants OR s.check-participants [ping or user\'s ID]',
     example: 's.check-participants OR s.check-participants 822160626226036736',
+    timeout: '30000',
+    chlMods: 1,
+    mods: 1,
     userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_ROLES', 'MANAGE_NICKNAMES'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_CHANNELS'],
-    async execute(message, args) {
+    async execute(message, args, client) {
 
-        if (!args) {
+        if (!args || args < 1) {
             const result = await connection.query(
                 `SELECT * FROM chPlayers WHERE guildId = ?`,
                 [message.guild.id]
@@ -21,22 +24,21 @@ module.exports = {
         
             for (const row of result[0]) {
                 const Members = row.player;
-                const name = await message.guild.members.cache.find(members => members.id == `${Members}`);
-                const tag = name.user.tag;
-                message.channel.send(`${tag}`)
+                const name = client.users.cache.get(Members) || await client.users.fetch(Members).catch(() => { });
+                const username = name.username;
+                message.channel.send({ content: `${username}` })
             }
         }
         else if (args[0]) {
 
-            const mmbr = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
-            if (mmbr == undefined) return message.reply('I am unable to add that user to the database because they have not talked in the server since the last time I was restarted. Please make sure the user sends a message in your server before you run this command. If you are receiving this message in error, please report this using the \`s.report\` command.');
+            const mmbr = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || client.users.cache.get(args[0]) || await client.users.fetch(args[0]).catch(() => {});
             const tag = mmbr.user.tag;
 
             const result = await connection.query(
                 `SELECT player FROM chPlayers WHERE guildId = ? AND player = ?;`,
                 [message.guild.id, mmbr.id]
             );
-            if (result[0][0].player === mmbr.id) {
+            if (result[0][0]?.player === mmbr.id) {
                 message.channel.send(`${tag} is currently in the \`Challenges\` database. You do not need to add them again.`)
                 return;
             } else {

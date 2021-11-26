@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
 const bot = require('../../config/bot.json');
+const embd = require('../../config/embed.json');
 
 module.exports = {
     name: 'submit',
@@ -10,7 +11,7 @@ module.exports = {
     example: '\`\`\`++submit 1 ` ` `language\n//code here ` ` `\nadditional information here.\n\`\`\`\nPlease remove the spaces between the backticks before language and after \`//code here\`. If you are submitting a link, please use this format: \`\`\`s.submit 1 https://github.com\`\`\` Meaning keep it all on the same line. Not formatting it this way will cause issues with our system.',
     note: 'Files are accepted! Just leave the `[answer]` field blank when submitting so just type `s.submit [challenge number]` and then upload your file.',
     inHelp: 'yes',
-    cooldown: 400,
+    timeout: '600000000',
     note: 'You can now include attachments! If you want to submit with an attachment just run \`s.sumbit [challenge number]\` and attach any files you would like to submit with your submission.',
     userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS'],
@@ -20,23 +21,13 @@ module.exports = {
         let guildId = message.guild.id;
         let dayNo = args[0];
         let answer = args.slice(1).join(' ') || 'only attachment submitted';
-
-        const isPlay = await connection.query(
-            `SELECT player FROM chPlayers WHERE player = ? AND guildId = ?;`,
-            [message.author.id, message.guild.id]
-        );
-        if (isPlay[0][0].player == undefined) {
-            message.delete();
-            message.channel.send(`Sorry, ${message.author.username}, You are not in the challenge system database. Therefore, you cannot play. If you are receiving this message in error, rest assure that the developer has been notified.`);
-            client.users.cache.get(bot.ownerID).send({ content: `${message.author.username} just tried to play in ${message.guild.name}'s challenge system but they are not in the database. The database returned *undefined* for \`${message.author.id}\` in guild ID \`${message.guild.id}\`. This *may* be a possible error, just making you aware that you may want to check the database!'` });
-            return;
-        }
+        let me = client.users.cache.get(bot.ownerID) || await client.users.fetch(bot.ownerID).catch(() => { });
 
         const result = await connection.query(
-            `SELECT * FROM Submissions WHERE guildId = ?;`,
-            [guildId]
+            `SELECT author FROM Submissions WHERE guildId = ? and challengeNo = ?;`,
+            [guildId, dayNo]
         );
-        if (result == undefined) {
+        if (result[0][0].author == message.author.id) {
             message.react('❌');
             message.reply('You already made a submission to this challenge. You may not submit more than one answer per challenge question. If you need to modify your submission, please use the \`s.edit-submission [challenge number] [new answer]\` command. Thank you!');
             return;
@@ -44,6 +35,7 @@ module.exports = {
 
             let author = message.author.id;
             let tag = message.author.username;
+            let authorSend = client.users.cache.get(a) || await client.users.fetch(a).catch(() => { });
 
             if (!dayNo) {
                 message.react('❌');
@@ -57,12 +49,12 @@ module.exports = {
                     );
 
                     let embed = new Discord.MessageEmbed()
-                        .setColor('#616169')
+                        .setColor(embd.submit)
                         .setTitle(`Thank you, ${tag}, for submitting your answer for challenge ${dayNo}.`)
                         .setDescription(`The answer you submitted was:\n${answer}\n\nIf you want to modify your answer, please copy and paste this command with your updated answer: \`s.edit-submission ${msgId} [replace this with your new answer]\``)
                         .setFooter(`If you need to modify your answer please run the s.edit-submission command. Thank you!`);
                     message.delete();
-                    message.client.users.cache.get(`${author}`).send({ embeds: [embed] });
+                    authorSend.send({ embeds: [embed] });
                 }
                 message.attachments.forEach(async attachment => {
                     const url = attachment.url;
@@ -72,12 +64,12 @@ module.exports = {
                     );
 
                     let embed = new Discord.MessageEmbed()
-                        .setColor('#616169')
+                        .setColor(embd.submit)
                         .setTitle(`Thank you, ${tag}, for submitting your answer for challenge ${dayNo}.`)
                         .setDescription(`The answer you submitted was:\n${answer}\n\nThis is the attachment you submitted: ${url}\n\nIf you want to modify your answer, please copy and paste this command with your updated answer: \`++modify-answer ${msgId} [replace this with your new answer]\``)
                         .setFooter(`If you need to modify your answer please run the s.modify-answer command. Thank you!`);
                     message.delete();
-                    message.client.users.cache.get(`${author}`).send({ embeds: [embed] });
+                    authorSend.send({ embeds: [embed] });
                 });
 
 

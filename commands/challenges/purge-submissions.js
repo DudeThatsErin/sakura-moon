@@ -7,7 +7,9 @@ module.exports = {
     usage: 's.purge-submissions',
     example: 's.purge-submissions',
     inHelp: 'yes',
-    timeout: 1000,
+    timeout: '600000000',
+    mods: 1,
+    chlMods: 1,
     userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     async execute (message, args) {

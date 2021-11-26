@@ -5,10 +5,12 @@ module.exports = {
     name: 'edit-challenge',
     description: 'This gives **mods** the ability to edit the challenge questions that get asked.',
     aliases: ['editchal', 'editchallenge', 'modify-challenge', 'ec'],
-    usage: 's.edit-challenge [challenge number] <number of points> [message ID]',
-    example: 's.edit-challenge 1 5 523896725896123',
-    timeout: 400,
-    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_ROLES', 'MANAGE_NICKNAMES'],
+    usage: 's.edit-challenge [challenge number] [updated challenge message]',
+    example: 's.edit-challenge 1 What is my favorite food?',
+    timeout: '6000000',
+    chlMods: 1,
+    mods: 1,
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_CHANNELS'],
     async execute (message, args) {
 
@@ -19,8 +21,12 @@ module.exports = {
                 `SELECT * FROM ChallengeQ WHERE guildId = ?;`,
                 [message.guild.id]
             );
-            const msgId = result[0][0].msgId;
-            const ch = result[0][0].channelD;
+        const msgId = result[0][0].msgId;
+        const result2 = await connection.query(
+            `SELECT * FROM Challenge WHERE guildId = ?;`,
+            [message.guild.id]
+        );
+            const ch = result2[0][0].channelD;
             const channel = message.guild.channels.cache.find(c => c.id === `${ch}`);
 
             connection.query(

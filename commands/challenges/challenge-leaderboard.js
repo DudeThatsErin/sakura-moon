@@ -8,9 +8,10 @@ module.exports = {
     usage: 's.leaderboard',
     example: 's.leaderboard or s.ldb or s.lbd',
     inHelp: 'yes',
-    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
-    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
-    async execute (message, args) {
+    timeout: '600000',
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
+    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
+    async execute (message, args, client) {
         let guild = message.guild.id;
         let author = message.author.id;
         let aUsername = message.author.username;
@@ -31,7 +32,7 @@ module.exports = {
         for (let i = 0; i < top10[0].length; i++) {
             const data = top10[0];
             const user = top10[0][i].author;
-            let membr = await message.client.users.fetch(user).catch(err => {console.log(err);});
+            let membr = client.users.cache.get(user) || await client.users.fetch(user).catch(err => {console.log(err);});
             let username = membr.username;
 
             userNames += `${i + 1}. ${username}\n`;

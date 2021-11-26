@@ -8,11 +8,12 @@ module.exports = {
     aliases: ['new-challenge', 'chall', 'c'],
     usage: 's.challenge [challenge number] [question]',
     inHelp: 'yes',
-    cooldown: 1000,
+    timeout: 45000000,
+    chlMods: 1,
     example: 's.challenge 1 What is my favorite color?',
     userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_ROLES', 'MANAGE_NICKNAMES'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_CHANNELS'],
-    async execute (message, args) {
+    async execute (message, args, client) {
 
         let msgId = message.id;
         let guildId = message.guild.id;
@@ -24,8 +25,9 @@ module.exports = {
             `SELECT * FROM Challenge WHERE guildId = ?;`,
             [guildId]
         );
+        //console.log(result[0][0].channelD)
         const announcementsChannel = result[0][0].channelD;
-        if (result === undefined) return message.channel.send('The challenge has not started yet. Please start the challenge first before running this.');
+        if (!result) return message.channel.send('The challenge has not started yet. Please start the challenge first before running this.');
         const participants = result[0][0].partRoleiD;
 
         if (!challengeNo) {
@@ -43,6 +45,7 @@ module.exports = {
                 message.reply('What is the challenge that you want to submit? You can\'t submit a blank challenge.');
                 return;
             } else {
+                let ch = client.channels.cache.get(announcementsChannel) || await client.channels.fetch(announcementsChannel).catch(console.log(err))
 
                 let embeD = new Discord.MessageEmbed()
                     .setColor(embd.newchQ)
@@ -51,13 +54,16 @@ module.exports = {
                     .setFooter('Run the s.submit command to submit answers to this challenge.');
 
 
-                await message.guild.channels.cache.get(announcementsChannel).send({ content: `Hey, <@&${participants}> A new challenge is up!`, embeds: [embeD] }).then(message => {
+                ch.send({ content: `Hey, <@&${participants}> A new challenge is up!`, embeds: [embeD] }).then(message => {
+                    console.log(message);
+                    console.log(message.id);
                     const msg = message.id;
                     connection.query(
                         `INSERT INTO ChallengeQ (msgId, guildId, title, challengeNo, moderator) VALUES (?, ?, ?, ?, ?);`,
                         [msg, guildId, answer, challengeNo, moderator]
                     );
-                });
+                }
+                );
                 const results = await connection.query(
                     `SELECT * FROM ChallengeQ WHERE guildId = ? AND challengeNo = ?;`,
                     [guildId, challengeNo]

@@ -9,8 +9,9 @@ module.exports = {
     usage: 's.end-challenge',
     example: 's.end-challenge',
     inHelp: 'yes',
-    timeout: 1000,
-    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
+    chlMods: 1,
+    timeout: '1000000',
+    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
     botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
     async execute (message) {
             
@@ -19,7 +20,7 @@ module.exports = {
                 [message.guild.id]
             );
             connection.query(
-                `DELETE FROM Challenge WHERE guildId = ?;`,
+                `DELETE FROM ChallengeQ WHERE guildId = ?;`,
                 [message.guild.id]
             );
             connection.query(
