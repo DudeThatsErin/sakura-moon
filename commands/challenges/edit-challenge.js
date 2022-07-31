@@ -1,45 +1,39 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
+const config = require('../../config/config.json');
 
 module.exports = {
     name: 'edit-challenge',
     description: 'This gives **mods** the ability to edit the challenge questions that get asked.',
     aliases: ['editchal', 'editchallenge', 'modify-challenge', 'ec'],
-    usage: 's.edit-challenge [challenge number] [updated challenge message]',
-    example: 's.edit-challenge 1 What is my favorite food?',
-    timeout: '6000000',
-    chlMods: 1,
-    mods: 1,
-    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS'],
-    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'EMBED_LINKS', 'ATTACH_FILES', 'ADD_REACTIONS', 'MANAGE_CHANNELS'],
+    usage: `${config.prefix}edit-challenge [challenge number] [new question]`,
+    challengeMods: 1,
+    example: `${config.prefix}ec 5 What type of pizza is Erin\'s favorite?`,
     async execute (message, args) {
 
+        // THIS CURRENTLY DOES NOT LOOK FOR THE CHALLENGE NUMBER. NEED TO UPDATE IT SO THE CHALLNEGE NUMBER IS USED IN THE DB TO FIND THE EXACT ONE THAT NEEDS TO BE UPDATED.
             let day = args[0];
             let title = args.slice(1).join(' ');
 
             const result = await connection.query(
-                `SELECT * FROM ChallengeQ WHERE guildId = ?;`,
+                `SELECT * FROM Challenge WHERE guildId = ?;`,
                 [message.guild.id]
             );
-        const msgId = result[0][0].msgId;
-        const result2 = await connection.query(
-            `SELECT * FROM Challenge WHERE guildId = ?;`,
-            [message.guild.id]
-        );
-            const ch = result2[0][0].channelD;
-            const channel = message.guild.channels.cache.find(c => c.id === `${ch}`);
+            const msgId = result[0][0].msgId;
+            const ch = result[0][0].channelD;
+            const channel = message.guild.channels.cache.find(c => c.id === ch);
 
             connection.query(
-                `UPDATE ChallengeQ SET title = ? WHERE msgId = ? AND guildId = ?`,
+                `UPDATE Challenge SET title = ? WHERE msgId = ? AND guildId = ?`,
                 [title, msgId, message.guild.id]
             );
 
-            let embed = new Discord.MessageEmbed()
-                .setColor('BLUE')
+            let embed = new Discord.EmbedBuilder()
+                .setColor(0x848099)
                 .setTitle(`Challenge ${day}`)
                 .setDescription(`${title}`)
-                .setFooter('Run the s.submit to submit answers to this challenge.');
-        
+                .setFooter({text:`Run the ${config.prefix}submit to submit answers to this challenge.`});
+
         channel.messages.fetch(msgId).then(message => {
             if (message) message.edit({ embeds: [embed] });
         });

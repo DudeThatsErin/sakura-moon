@@ -1,32 +1,27 @@
-const Discord = require('discord.js');
 const connection = require('../../database.js');
-
+const config = require('../../config/config.json');
 
 module.exports = {
     name: 'end-challenge',
     description: 'This gives **mods** the ability to end the challenge that was just being played.',
     aliases: ['endchallenge', 'echallenge', 'exitchallenge', 'exitc', 'over'],
-    usage: 's.end-challenge',
-    example: 's.end-challenge',
-    inHelp: 'yes',
-    chlMods: 1,
-    timeout: '1000000',
-    userPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
-    botPerms: ['SEND_MESSAGES', 'VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'KICK_MEMBERS', 'MANAGE_ROLES'],
-    async execute (message) {
-            
+    usage: `${config.prefix}end-challenge`,
+    example: `${config.prefix}end-challenge`,
+    challengeMods: 1,
+    async execute (message, args) {
+
             connection.query(
                 `DELETE FROM Challenge WHERE guildId = ?;`,
                 [message.guild.id]
             );
             connection.query(
-                `DELETE FROM ChallengeQ WHERE guildId = ?;`,
+                `DELETE FROM Challenges WHERE guildId = ?;`,
                 [message.guild.id]
             );
             connection.query(
                 `DELETE FROM Submissions WHERE guildId = ?;`,
                 [message.guild.id]
-            );    
+            );
 
         message.react('✅');
 

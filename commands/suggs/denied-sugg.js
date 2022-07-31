@@ -1,16 +1,14 @@
 const Discord = require('discord.js');
 const connection = require('../../database.js');
+const config = require('../../config/config.json');
 
 module.exports = {
     name: 'denied-sugg',
     aliases: ['deniedsugg', 'denys', 'nosugg', 'deniedsuggestion', 'deniedsuggestions', 'denysugg'],
-    inHelp: 'yes',
     description: 'Allows **mods** to deny a particular suggestion.',
-    usage: '++deniedsugg messageID [reason]',
-    example: '++deniedsugg 847580954306543616 I don\'t want to do what you suggested! GO AWAY!',
-    modOnly: 'yes',
-    userPerms: [''],
-    botPerms: ['MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_MESSAGES', 'KICK_MEMBERS', 'BAN_MEMBERS'],
+    usage: `${config.prefix}deniedsugg messageID [reason]`,
+    example: `${config.prefix}deniedsugg 847580954306543616 I don\'t want to do what you suggested! GO AWAY!`,
+    modOnly: 1,
     async execute(message, args) {
 
         const msgId = args[0];
@@ -48,7 +46,7 @@ module.exports = {
         const mod = message.author.id;
 
         const stats = args.slice(1).join(' ');
-        if(!stats) return message.channel.send('You need to include the status of the suggestion as well as the message ID.');
+        if(!stats) return message.channel.send({text:'You need to include the status of the suggestion as well as the message ID.'});
 
         connection.query(
             `UPDATE Suggs SET stat = ?, Moderator = ? WHERE noSugg = ?;`,
@@ -69,25 +67,25 @@ module.exports = {
         const moderate = moder.tag || message.author.tag;
         
         const denied = new Discord.MessageEmbed()
-            .setColor('A4503E')
-            .setAuthor(`${aut}`, `${avatar}`)
-            .setDescription(`${suggestion}`)
+            .setColor(0xA4503E)
+            .setAuthor({ name: aut, iconURL: avatar})
+            .setDescription(suggestion)
             .addFields(
-                { name: 'Unfortunately, your suggestion was denied. This is the reason:', value: `${upStatus}`},
-                { name: 'Moderator that denied your suggestion:', value: `${moderate}`},
+                [{ name: 'Unfortunately, your suggestion was denied. This is the reason:', value: upStatus},
+                { name: 'Moderator that denied your suggestion:', value: moderate},]
             )
             .setTimestamp()
-            .setFooter('If you don\'t understand this reason, please contact the moderator that updated your suggestion. Thank you!');
-            message.client.users.cache.get(`${OGauthor}`).send({ embeds: [denied] });
-            message.channel.send(`I have denied the suggestion you told me to, <@${moder}>. I also sent a message to <@${OGauthor}> about this denial and the reason as well as deleted the message in the Suggestions channel.`)
-                message.delete();
+            .setFooter({text: 'If you don\'t understand this reason, please contact the moderator that updated your suggestion. Thank you!'});
+            message.client.users.cache.get(OGauthor).send({ embeds: [denied] });
+            message.channel.send({text:`That has been denied and the suggestion has been deleted. 😃`});
+            message.react('✅');
                 try {
                     await connection.query(
                         `DELETE FROM Suggs WHERE noSugg = ? AND Author = ?;`,
                         [msgId, OGauthor],
                     );
                 } catch (error) {
-                    message.reply('There was an error deleting the suggestion from the database. Please report this!');
+                    message.reply({text:'There was an error deleting the suggestion from the database. Please report this!'});
                     console.log(error);
                 }
             const chnnel = await message.guild.channels.cache.find(c => c.name === 'suggestions');
