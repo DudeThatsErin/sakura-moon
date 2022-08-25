@@ -1,6 +1,7 @@
 const connection = require('../../database.js');
 const Discord = require('discord.js');
 const config = require('../../config/config.json');
+const bot = require('../../config/bot.json');
 
 module.exports = {
     name: 'progressreport',
@@ -16,7 +17,7 @@ module.exports = {
             message.react('❓');
             message.reply('Please include the status Erin, sheesh.')
         }
-        const chnnel = client.channels.cache.find(channel => channel.id === config.reportsChId);
+        const chnnel = client.channels.cache.find(channel => channel.id === bot.reportsChId);
 
         let msgId = args[0];
         if (msgId < 0) {
@@ -40,7 +41,7 @@ module.exports = {
                 .setAuthor({name: authorUsername, iconURL: avatar})
                 .setDescription(`**This is the original report:**\n${original}\n\n**This is the updated status:**\n${description}`)
                 .setTimestamp()
-                .setFooter({text:'Last Updated on', iconURL: config.avatar})
+                .setFooter({text:'Last Updated on', iconURL: bot.avatar})
 
 
             chnnel.messages.fetch(msgId).then(message => {
@@ -77,7 +78,7 @@ module.exports = {
                     }
                 ])
                 .setTimestamp()
-                .setFooter({text: 'If this is not correct, please report this!', iconURL: config.avatar})
+                .setFooter({text: 'If this is not correct, please report this!', iconURL: bot.avatar})
 
             (await message.client.users.cache.get(OG)).send({ embeds: [report2] });
 

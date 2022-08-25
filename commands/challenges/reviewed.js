@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}reviewed [challenge number] <number of points> [message ID]`,
     example: `${config.prefix}reviewed 1 1 841143871689064448`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
                 let challengeNo = args[0];
                 let points = args[1];

@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}deniedsugg messageID [reason]`,
     example: `${config.prefix}deniedsugg 847580954306543616 I don\'t want to do what you suggested! GO AWAY!`,
     modOnly: 1,
+    suggest: 1,
     async execute(message, args) {
 
         const msgId = args[0];
@@ -65,8 +66,8 @@ module.exports = {
         );
         const moder = moderator[0][0].Moderator;
         const moderate = moder.tag || message.author.tag;
-        
-        const denied = new Discord.MessageEmbed()
+
+        const denied = new Discord.EmbedBuilder()
             .setColor(0xA4503E)
             .setAuthor({ name: aut, iconURL: avatar})
             .setDescription(suggestion)

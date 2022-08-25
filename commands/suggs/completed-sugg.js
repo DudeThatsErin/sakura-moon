@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}completedsugg messageID [reason]`,
     example: `${config.prefix}completedsugg 847580954306543616 I have completed your suggestion!`,
     modOnly: 1,
+    suggest: 1,
     async execute(message, args) {
 
             const msgId = args[0];
@@ -43,12 +44,12 @@ module.exports = {
                     );
                     const avatar = result4[0][0].Avatar;
 
-    
+
                 mod = message.author.id;
-    
+
                 const stats = args.slice(1).join(' ');
                 if(!stats) return message.channel.send({text:'You need to include the completion status message for this suggestion as well as the message ID.'});
-    
+
                 try {
                     connection.query(
                         `UPDATE Suggs SET stat = ?, Moderator = ? WHERE noSugg = ?;`,
@@ -58,7 +59,7 @@ module.exports = {
                     message.reply({text: 'There was an error updating the suggestion in the database. Please report this!'});
                     console.log(error);
                 }
-    
+
 
                     const result8 = await connection.query(
                         `SELECT stat FROM Suggs WHERE noSugg = ?;`,
@@ -73,8 +74,8 @@ module.exports = {
                     const moder = moderator[0][0].Moderator;
                     const moderate = moder.tag || message.author.tag;
 
-            
-                const denied = new Discord.MessageEmbed()
+
+                const denied = new Discord.EmbedBuilder()
                     .setColor(0x6E3EA4)
                     .setAuthor({name: aut, iconURL:avatar})
                     .setDescription(suggestion)
@@ -84,8 +85,8 @@ module.exports = {
                     )
                     .setTimestamp()
                     .setFooter({text: 'If you don\'t understand this decision, please contact the moderator that completed your suggestion. Thank you!'});
-    
-            
+
+
                 (await message.client.users.cache.get(OGauthor)).send({ embeds: [denied] });
                 message.react('✅');
                 message.channel.send({text:`I have done that for you. The message is now deleted in the suggestions channel. 😃`});
@@ -99,11 +100,14 @@ module.exports = {
                         message.reply('There was an error deleting the suggestion from the database. Please report this!');
                         console.log(error);
                     }
-        
-    
-                    const chnnel = await message.guild.channels.cache.find(c => c.name === 'suggestions');
+
+
+                    const info = await connection.query('SELECT suggsChId FROM guildConfig WHERE guildId = ?;', [message.guild.id]);
+                    const suggChId = info[0][0].suggsChId;
+
+                    const chnnel = await message.guild.channels.cache.find(c => c.id === suggChId);
                     chnnel.messages.fetch(msgId).then(message => {
-                        message.delete(); 
+                        message.delete();
                     });
             } else {
                 message.reply({text:'You need to include the ID of the message you want to mark as completed.'})

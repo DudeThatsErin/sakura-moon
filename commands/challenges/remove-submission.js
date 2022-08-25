@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}remove-submissions [message ID]`,
     example: `${config.prefix}remove-submissions 841301824115965952`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
         let name = message.author.id;
         const modname = await message.client.users.fetch(name).catch(err => {console.log(err);});

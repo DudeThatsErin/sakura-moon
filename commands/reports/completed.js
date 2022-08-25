@@ -1,11 +1,12 @@
 const connection = require('../../database.js');
 const Discord = require('discord.js');
 const config = require('../../config/config.json');
+const bot = require('../../config/bot.json')
 
 module.exports = {
     name: 'completedreport',
     description: 'This allows **Erin** to mark bug reports as completed and delete them from the channel.',
-    aliases: ['completed-report', 'creport', 'cr', 'dr', 'donereport', 'done-report'],
+    aliases: ['completed-report', 'creport', 'donereport', 'done-report'],
     usage: `${config.prefix}completedreport <message ID> <description>`,
     example: `${config.prefix}completedreport 852197394828230716 The bot is broken!`,
     ownerOnly: 1,
@@ -17,7 +18,7 @@ module.exports = {
             message.reply('Please include the status Erin, sheesh.')
             return;
         }
-        const channel = client.channels.cache.find(channel => channel.id === config.reportsChId);
+        const channel = client.channels.cache.find(channel => channel.id === bot.reportsChId);
 
         let messageId = args[0];
         if (messageId < 0) {
@@ -40,7 +41,7 @@ module.exports = {
                 .setTitle(`Your bug has been fixed!`)
                 .setAuthor({name: authorUsername, iconURL: avatar})
                 .setDescription(`**This is the original report:**\n${original}\n\n**This is the current status:**\n${description}\n\n`)
-                .setFooter({text:'If this is incorrect please report this!', iconURL: config.avatar})
+                .setFooter({text:'If this is incorrect please report this!', iconURL: bot.avatar})
 
             channel.messages.fetch(messageId).then(message => {
                 if (message) message.delete();

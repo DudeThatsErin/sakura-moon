@@ -1,41 +1,45 @@
-const Discord = require('discord.js');
 const config = require('../../config/config.json');
+const { EmbedBuilder } = require('discord.js');
+const bot = require('../../config/bot.json');
 
 module.exports = {
     name: 'welcome',
-    description: 'Displays information about our server.',
-    usage: `${config.prefix}welcome`,
-    modOnly: 1,
-    execute(message, args) {
+    devOnly: 1,
+    execute(message) {
+        let embed = new EmbedBuilder()
+            .setColor(0xFF1493)
+            .setTitle('Welcome to Sakura Moon\'s Development Server!')
+            .setDescription('This is where you can get help with the bot or run its random commands!')
+            .setFooter({text: `If you would like to make a suggestion for the bot, use ${config.prefix}suggest!`});
 
-        const welcomeEmbed = new Discord.EmbedBuilder()
-            .setColor(0x000000)
-            .setTitle('Welcome to r/CodingHelp\'s Discord Server!')
-            .setDescription('We are a Discord Server dedicated to helping people learn how to code. We have over 2.5k members and can\'t wait to welcome more! Come join the community of people that are looking to share their knowledge with new programmers!\n\nYou can also find us on [Reddit](https://reddit.com/r/CodingHelp) with over 54k members or on our new [Knowledgebase](https://codinghelp.site)!')
-            .setImage('https://images-ext-1.discordapp.net/external/r__1ELtLocROQQFz8W5GmWQzOA5wlP4Tag7XTbGqQpY/https/media.discordapp.net/attachments/586293598996135953/757414290058903712/FxSHhhK.png')
+        let embed2 = new EmbedBuilder()
+            .setColor(0xFFB6C1)
+            .setTitle('Rules')
+            .setDescription('There aren\'t very many, which means you have no reason to stick to them.')
             .addFields(
-                { name: 'Current Staff', value: 'Owner: <@455926927371534346>\nDiscord Mods: <@541305895544422430>, <@732667572448657539> & <@198147661449134080>\nSubreddit Mods: <@444524618401841152>, <@332652477528801280>, & <@136611109007261696>' },
-                { name: 'How can I become part of the staff team?', value: 'You can apply by using <@575252669443211264>. Send the <@575252669443211264> bot a DM and we will respond. We accept applications all year long though becoming a mod happens randomly. We will post in <#359760352470368281> when we are opening moderator positions for any of our locations.' },
-            )
-            .setFooter({ text: 'Logo by Matt aka v4#1503.'});
-
-          message.channel.send({ embeds: [welcomeEmbed], components: [
-            {
-              type: 1,
-              components: [
                 {
-                  type: 2,
-                  style: 5,
-                  label: 'Invite your friends!',
-                  url: `https://discord.gg/geQEUBm`
-                }, {
-                  type: 2,
-                  style: 5,
-                  label: 'Visit our Knowledgebase!',
-                  url: `https://codinghelp.site`
+                    name: 'Rule 1',
+                    value: 'Please keep all conversations on topic and in the correct sections.'
+                },
+                {
+                    name: 'Rule 2',
+                    value: 'Do not DM members unless you gained permission first.'
+                },
+                {
+                    name: 'Rule 3',
+                    value: 'Do not self promote in this server or via DMs.'
+                },
+                {
+                    name: 'Rule 4',
+                    value: `Do not ping Erin (the dev) unless the bot is down or there is a major error with the bot. That is why she made the \`${config.prefix}report\` command. Under no circumstances, should you DM Erin unless she told you to.`
                 }
-              ]
-            }
-          ] });
+            );
+
+        let access = new EmbedBuilder()
+            .setColor(0xFFC0CB)
+            .setTitle('React to this message to gain access to the server.')
+            .setDescription('React with 💭 to get access to the server.');
+
+        message.channel.send({ embeds: [embed, embed2] })
     }
-  };
+}

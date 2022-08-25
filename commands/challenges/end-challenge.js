@@ -8,6 +8,7 @@ module.exports = {
     usage: `${config.prefix}end-challenge`,
     example: `${config.prefix}end-challenge`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
 
             connection.query(

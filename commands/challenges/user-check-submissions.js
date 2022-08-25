@@ -8,7 +8,7 @@ module.exports = {
     aliases: ['ucs', 'ucksubs', 'uck-subs', 'userchecksubmissions'],
     usage: `${config.prefix}user-check-submissions`,
     example: `${config.prefix}user-check-submissions`,
-    partsOnly: 1,
+    challenge: 1,
     async execute (message, args) {
         let name = message.author.id;
 

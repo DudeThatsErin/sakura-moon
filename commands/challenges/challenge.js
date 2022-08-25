@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}challenge [challenge number] [question]`,
     example: `${config.prefix}challenge 1 What is my favorite color?`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
 
         let msgId = message.id;

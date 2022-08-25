@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}clear-points [message ID]`,
     example: `${config.prefix}clear-points 841330343641874532`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
 
         let msgId = args[0];

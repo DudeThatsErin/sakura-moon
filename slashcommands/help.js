@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
 const ee = require('../config/embed.json');
 const { ButtonPaginator } = require('@psibean/discord.js-pagination');
+const config = require('../config/config.json')
 
 module.exports = {
 	name: 'help',
@@ -13,20 +14,19 @@ module.exports = {
 			type: 3
 		}
 	],
-	inHelp: 'yes',
 	async execute(interaction, client) {
 		const pages = [];
 		const roleColor =
-			interaction.guild.me.displayHexColor === "0x000000"
+			interaction.guild.members.me.displayHexColor === "0x000000"
 				? "0xffffff"
-				: interaction.guild.me.displayHexColor; // not sure if this line will work w/v14 colors.
+				: interaction.guild.members.me.displayHexColor; // not sure if this line will work w/v14 colors.
 
 		const createCommandHelpEmbed = ({
 			roleColor,
 			title,
-			description = `These are all of the commands r/CodingHelp can do. If you want to get more information you can do \`/help <command>\`.`,
+			description = `These are all of the commands Sakura Moon can do. If you want to get more information you can do \`/help <command>\`.`,
 			fields }) => {
-				return new MessageEmbed()
+				return new EmbedBuilder()
 					.setColor(roleColor)
 					.setTitle(title)
 					.setDescription(description)
@@ -54,7 +54,7 @@ module.exports = {
 			fields: [
 				{
 					name: 'These are all of our slash commands. This means that you type `/` before the command name to access them.',
-					value: '```css\nhelp\n```'
+					value: '```css\nhelp\nprefix\nupdate-prefix\nreset-prefix```'
 				}
 			]
 		});
@@ -162,7 +162,7 @@ module.exports = {
 			//  const buttonPaginator = new ButtonPaginator(interaction, { pages });
 			//  await buttonPaginator.send();
 
-			message.reply({ content: `The commands are listed on our website. Check this link: https://codinghelp.site/r-CodingHelp-Bot-s-Commands-b0c601c559a14d5d936426c98b51193d`})
+			interaction.editReply({ content: `The commands are listed on our website. Check this link: https://dudethatserin.com/c2ba3760e54c43b384439012e30f15f7?v=bb0f431e8c154f8fb34cde89940ad40c`})
 		}
 
 	},

@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}add-points <message ID> <number of points>`,
     example: `${config.prefix}add-points 850726247050903562 3`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
             let msgId = args[0];
             let author = message.author.username;

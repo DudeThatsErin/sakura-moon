@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}autoadd-members`,
     example: `${config.prefix}autoadd-members`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
 
             let joinersRole = message.guild.roles.cache.find(r => r.name === "Participants") || "none";

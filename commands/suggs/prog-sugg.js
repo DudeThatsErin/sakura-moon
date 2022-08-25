@@ -4,12 +4,16 @@ const config = require('../../config/config.json');
 
 module.exports = {
     name: 'prog-sugg',
-    aliases: ['inprogsugg', 'workingsugg', 'workingsuggestion', 'inprogresssuggestion', 'inprogresssuggestions', 'workingsuggestions', 'worksugg', 'ps', 'ws'],
+    aliases: ['inprogsugg', 'workingsugg', 'workingsuggestion', 'inprogresssuggestion', 'inprogresssuggestions', 'workingsuggestion', 'worksugg', 'ps', 'ws'],
     description: 'Allows **mods** to mark a particular suggestion as *in progress*.',
     usage: `${config.prefix}prog-sugg messageID [status message]`,
     example: `${config.prefix}prog-sugg 847580954306543616 This is the in-progress status for this suggestion.`,
     modOnly: 1,
+    suggest: 1,
     async execute(message, args) {
+
+        const stuff = await connection.query('SELECT prefix FROM guildConfig WHERE guildId = ?;', [message.guild.id]);
+        const prefix = stuff[0][0].prefix;
 
             const msgId = args[0];
             if(msgId > 0 ) {
@@ -29,7 +33,7 @@ module.exports = {
                 [msgId],
             );
             const OGauthor = result2[0][0].Author;
-            let name = (await message.client.users.cache.get(`${OGauthor}`)).tag;
+            let name = (await message.client.users.cache.get(OGauthor)).tag;
 
             const result3 = await connection.query(
                 `SELECT Message from Suggs WHERE noSugg = ?;`,
@@ -71,7 +75,7 @@ module.exports = {
             const moder = moderator[0][0].Moderator;
             const moderate = moder.tag || message.author.tag;
 
-            const inprogress = new Discord.MessageEmbed()
+            const inprogress = new Discord.EmbedBuilder()
                 .setColor(0x004d4d)
                 .setAuthor({name: name, iconURL: avatar})
                 .setDescription(suggestion)
@@ -79,15 +83,15 @@ module.exports = {
                     [{ name: 'Current Status', value: upStatus},
                     { name: 'The moderator that last updated this was', value: moderate},]
                 )
-                .setFooter({text: `If you would like to suggest something, use ${config.prefix}suggestions`});
+                .setFooter({text: `If you would like to suggest something, use ${prefix}suggestions`});
 
-            const updated = new Discord.MessageEmbed()
+            const updated = new Discord.EmbedBuilder()
                 .setColor(0x3EA493)
                 .setAuthor({name: name, iconURL: avatar})
                 .setDescription(suggestion)
                 .addFields(
                     [{ name: 'Your suggestion has been updated! This is the current status:', value: upStatus},
-                    { name: 'Moderator that updated your suggestion:', value: moder},]
+                    { name: 'Moderator that updated your suggestion:', value: moderate},]
                 )
                 .setTimestamp()
                 .setFooter({text: 'If you don\'t understand this status, please contact the moderator that updated your suggestion. Thank you!'});
@@ -96,7 +100,10 @@ module.exports = {
                 message.react('✅');
             message.channel.send({text: `The suggestion has been updated in the channel and the message was sent. 😃`});
 
-            const chnnel = await message.guild.channels.cache.find(c => c.name === 'suggestions');
+            const info = await connection.query('SELECT suggsChId FROM guildConfig WHERE guildId = ?;', [message.guild.id]);
+            const suggChId = info[0][0].suggsChId;
+
+            const chnnel = await message.guild.channels.cache.find(c => c.id === suggChId);
             chnnel.messages.fetch(msgId).then(message => {
                 if (message) message.edit({ embeds: [inprogress] });
                     if(message) message.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));

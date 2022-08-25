@@ -6,7 +6,7 @@ module.exports = {
     aliases: ['clearsuggestions', 'cleardb', 'cdb', 'emptydb', 'emptysuggestions', 'clear-suggs'],
     description: 'Emptys the Suggestion Database.',
     usage: `${config.prefix}clearsuggs`,
-    ownerOnly: 1,
+    devOnly: 1,
     async execute(message) {
 
         connection.query(`TRUNCATE TABLE Suggs;`);

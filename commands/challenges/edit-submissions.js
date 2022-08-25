@@ -9,7 +9,7 @@ module.exports = {
     usage: `${config.prefix}edit-submission [message ID] [new answer]`,
     example: `${config.prefix}edit-submission 841302144727646269 I like pudding!`,
     note: 'You are allowed to upload files. Just leave the `[new answer]` field blank and just upload',
-    partsOnly: 1,
+    challenge: 1,
     async execute(message, args) {
 
         let msgId = args[0];

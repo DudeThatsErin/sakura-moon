@@ -8,6 +8,7 @@ module.exports = {
     aliases: ['editchal', 'editchallenge', 'modify-challenge', 'ec'],
     usage: `${config.prefix}edit-challenge [challenge number] [new question]`,
     challengeMods: 1,
+    challenge: 1,
     example: `${config.prefix}ec 5 What type of pizza is Erin\'s favorite?`,
     async execute (message, args) {
 

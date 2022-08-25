@@ -1,4 +1,5 @@
 const connection = require('../../database.js');
+const bot = require('../../config/bot.json');
 const me = require('../../config/dev.json');
 const { EmbedBuilder } = require('discord.js');
 const config = require('../../config/config.json');
@@ -15,7 +16,7 @@ module.exports = {
         let messageId = message.id;
         let description = args.slice(0).join(' ');
         if (!description && !message.attachments.first()) return message.reply('Please tell me what you would like to report. You can upload a file but please use words as well. A file alone does not tell me very much at all.')
-        const channel = client.channels.cache.find(channel => channel.id === config.reportsChId);
+        const channel = client.channels.cache.find(channel => channel.id === bot.reportsChId);
         let authorUsername = message.author.username;
         let avatar = message.author.displayAvatarURL({ dynamic: true });
         const url = message.attachments.first()?.url || 'No';
@@ -41,7 +42,7 @@ module.exports = {
             .setThumbnail(avatar)
             .setDescription(`**This is the report:**\n${description}\n\n**Any files uploaded?**\n${url}`)
             .setTimestamp()
-            .setFooter({ text: 'This was all of the information I could grab from the report.', icon_url: config.avatar });
+            .setFooter({ text: 'This was all of the information I could grab from the report.', icon_url: bot.avatar });
 
         const msg = channel.send({ embeds: [report] }).then(message => {
             const report3 = new EmbedBuilder()
@@ -60,7 +61,7 @@ module.exports = {
                 .setTimestamp()
                 .setFooter({
                     text: 'This was all of the info I could grab from the report.',
-                    icon_url: config.avatar
+                    icon_url: bot.avatar
                 });
             message.edit({ embeds: [report3] });
             });

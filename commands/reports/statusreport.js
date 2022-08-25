@@ -1,4 +1,5 @@
 const connection = require('../../database.js');
+const bot = require('../../config/bot.json');
 const config = require('../../config/config.json');
 
 module.exports = {
@@ -51,7 +52,7 @@ module.exports = {
                 timestamp: new Date(),
                 footer: {
                     text: 'If you don\'t understand this status, please ask Erin about it.',
-                    icon_url: config.avatar
+                    icon_url: bot.avatar
                 }
             };
 

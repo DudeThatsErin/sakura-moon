@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}leaderboard`,
     example: `${config.prefix}leaderboard or ${config.prefix}ldb or ${config.prefix}lbd`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
         let guild = message.guild.id;
         let author = message.author.id;
@@ -38,7 +39,7 @@ module.exports = {
         }
 
         if(top10 === undefined || top10[0] === undefined || top10[0][0] === undefined) {
-            message.channel.send('No one is on the leaderboard yet.');
+            return message.channel.send('No one is on the leaderboard yet.');
         } else if(results === undefined || results[0] === undefined || results[0][0] === undefined) {
 
 

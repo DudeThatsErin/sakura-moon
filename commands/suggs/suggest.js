@@ -8,12 +8,16 @@ module.exports = {
     description: 'Creates a suggestion!',
     usage: `${config.prefix}suggestions [suggestion here]`,
     example: `${config.prefix}suggestions I want pudding!`,
+    suggest: 1,
     async execute(message, args){
     const threadAuthor = message.member.displayName;
 
-    const channel = message.guild.channels.cache.find(c => c.id === `1000437492467650650`); //actual ch: 1000437492467650650 // test ch: 1000420829307338862
-    //console.log(channel)
-
+    const suggs = await connection.query('SELECT suggsChId FROM guildConfig WHERE guildId = ?;', [message.guild.id]);
+    console.log(suggs);
+    const suggsChId = suggs[0][0].suggsChId;
+    console.log(suggsChId);
+    const channel = message.guild.channels.cache.find(c => c.id === suggsChId); // test ch: 1000420829307338862
+    //console.log(channel.id);
 
         let messageArgs = '';
         if (args.length > 0) {
@@ -34,7 +38,8 @@ module.exports = {
         .setDescription(messageArgs)
         .setFooter({text: '📈 This suggestion currently needs votes and feedback. If you would like to discuss it, please visit the associated thread.'});
 
-        message.client.users.cache.get(author).send({content: `Hey, ${message.author.username}! Thanks for submitting a suggestion! Our server needs to have time to vote on this. Once some time has passed, you can check the suggestion channel to check the updated status of your suggestion! We appreciate your feedback! Happy chatting!`});
+        message.client.users.cache.get(author).send({content: `Hello, ${message.author.username}! Thanks for submitting a suggestion! Our server needs to have time to vote on this. Once some time has passed, you can check the suggestion channel to check the updated status of your suggestion! We appreciate your feedback! Happy chatting!`});
+        console.log('channel?', channel)
 
         await channel.send({embeds: [initial]}).then(async (message) => {
             message.react('👍');
@@ -46,8 +51,8 @@ module.exports = {
             });
             try {
                 await connection.query(
-                    `INSERT INTO Suggs (noSugg, Author, Message, Avatar, stat) VALUES(?, ?, ?, ?, ?)`,
-                    [message.id, author, messageArgs, avatar, newStatus]
+                    `INSERT INTO Suggs (noSugg, guildId, Author, Message, Avatar, stat) VALUES(?, ?, ?, ?, ?, ?)`,
+                    [message.id, message.guild.id, author, messageArgs, avatar, newStatus]
                 );
 
             } catch(err) {

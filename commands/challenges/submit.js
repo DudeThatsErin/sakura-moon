@@ -11,7 +11,7 @@ module.exports = {
     note: `Files are accepted! Just leave the \`[answer]\` field blank when submitting so just type \`${config.prefix}submit [challenge number]\` and then upload your file.`,
     cooldown: 400,
     note: `You can now include attachments! If you want to submit with an attachment just run \`${config.prefix}sumbit [challenge number]\` and attach any files you would like to submit with your submission.`,
-    partsOnly: 1,
+    challenge: 1,
     async execute(message, args) {
 
         let msgId = message.id;

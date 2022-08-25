@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}mod-check-submissions [challenge number]`,
     example: `${config.prefix}mod-check-submissions 1`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
         let name = message.author.id;
         let challengeNo = args[0];

@@ -1,4 +1,3 @@
-const config = require('../config/config.json');
 const me = require('../config/dev.json');
 const Discord = require('discord.js');
 const connection = require('../database.js')
@@ -6,6 +5,13 @@ const connection = require('../database.js')
 module.exports = {
     name: 'messageCreate',
     async execute(message, client) {
+
+        const stuff = await connection.query(
+            `SELECT * FROM guildConfig WHERE guildId = ?;`,
+            [message.guild.id]
+        );
+        const prefix = stuff[0][0].prefix;
+        const ownerId = stuff[0][0].ownerId;
 
         //console.log(message);
         //console.log('My ID should match this: 455926927371534346', message.mentions.repliedUser.id); // how I get the user ID on new replies.
@@ -20,84 +26,160 @@ module.exports = {
             //console.log('bot message');
             return;
         };
-        if (!message.content.startsWith(config.prefix)) {
+        if (!message.content.startsWith(prefix)) {
             //console.log('does not start with prefix.');
             return;
         };
-        const args = message.content.slice(config.prefix.length).trim().split(/ +/);
+        const args = message.content.slice(prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
         const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-        if (!command) return message.channel.send({ content: `That command does not exist. Run \`/help\` to see all of my commands.` });
+        if (!command) return message.channel.send({ content: `That command does not exist. Run \`${prefix}help\` to see all of my commands.` });
         //console.log(command);
+
+        // makes sure the bot can send messages in the channel this is ran in.
+        const channel = client.channels.cache.get(message.channel.id);
+        const botPermissionsIn = message.guild.members.me.permissionsIn(channel);
+        if(!botPermissionsIn.has(Discord.PermissionsBitField.Flags.SendMessages)) return message.author.send(`I can\'t send messages in that channel. I need to have the \`SEND MESSAGES\` permission for that channel. A mod or guild owner will need to update this. If you are seeing this in error, please run the \`${prefix}report\` command.`);
+
+        const botPerms = [Discord.PermissionsBitField.Flags.SendMessages, Discord.PermissionsBitField.Flags.ViewChannel, Discord.PermissionsBitField.Flags.ReadMessageHistory, ]
+        let v = 0;
+        for(const i of botPerms) {
+            if(!message.guild.members.me.permissionsIn(channel).has(i)) {
+                v++
+            }
+            if(v == botPerms.length) {
+                message.react('❌');
+                return message.author.send('I do not have the necessary permissions for this channel. I need \`Read Message History, View Channel, and Send Messages.\`');
+            }
+        }
 
         // owner only
         if (command.ownerOnly === 1) {
+            if (!message.author.id === ownerId) {
+                return message.reply({ content: `This is a command only the server/guild owner can use. If you are seeing this in error use the \`${prefix}report\` command.` });
+            }
+        }
+
+        //erin/dev only
+        if (command.devOnly === 1) {
             if (!message.author.id === me.id) {
-                return message.reply({ content: `This is only a command Erin (<@${me.id}>) can use. If you are seeing this in error use the \`${config.prefix}report\` command.` });
+                return message.reply({ content: `This is a command only the server/guild owner can use. If you are seeing this in error use the \`${prefix}report\` command.` });
             }
         }
 
+        //moderator only commands (if roles have been provided)
+        const mod = await connection.query(`SELECT * FROM guildModIds WHERE guildId = ?;`, [message.guild.id]);
+        if (mod != undefined) {
+            if(command.modOnly === 1) {
+                for (i = 0; i < mod[0].length; i++) {
+                    const data = mod[0];
+                    const role = data[i].modId;
+                    const roleName = message.guild.roles.cache.get(role);
 
-        const modRoles = ['780941276602302523', '822500305353703434', '718253309101867008', '751526654781685912'];
-        const modIDs = ['732667572448657539', '455926927371534346', '541305895544422430'];
-        const isMod = modIDs.reduce((alrdyGod, crr) => alrdyGod || message.content.toLowerCase().split(' ').includes(crr), false);
-        let value = 0;
-        if (message.channel.parentID === '382210817636040706') {
-            for (const ID of modRoles) {
-                if (!message.member.roles.cache.has(ID)) {
-                    value++
+                    roleNames += `${i + 1}. ${roleName}\n`;
+
+                    if (!message.member.permissions.has(role)) {
+                        i++
+                    }
+                    if (value == mod.length) {
+                        let embed = EmbedBuilder()
+                            .setColor(0xFFB6C1)
+                            .setTitle('You do not have one of the required roles...')
+                            .addFields(
+                                {
+                                    name: 'You need one of these roles:',
+                                    value: roleNames,
+                                    inline: true
+                                }
+                            )
+                        message.react('❌');
+                        message.reply({ embeds: [embed] });
+                        return;
+                    }
                 }
-                //message.channel.parentID === '382210817636040706' &&
-                if (value != modRoles.length && isMod) {
-                    message.react('❌');
-                    message.reply({ content: `Please do not ping the mods. If you need to contact them, please message <@575252669443211264> to open a ModMail ticket. Thank you!` });
+
+
+            }
+        } else {
+            //moderator only command (people who have these perms; if roles have not been provided)
+            const modPerms = [Discord.PermissionsBitField.Flags.KickMembers, Discord.PermissionsBitField.Flags.ManageMembers, Discord.PermissionsBitField.Flags.BanMembers, Discord.PermissionsBitField.Flags.ManageRoles, Discord.PermissionsBitField.Flags.Administrator];
+            let value = 0;
+            if(command.modOnly === 1) {
+                if (message.author.id !== ownerId) {
+                    console.log(message.author.id);
+                    constole.log(ownerId)
+                    return message.reply({ content: `This is a command only moderators and guild/server owners can use. You do not have the required permissions. The guild/server owner has not provided me with the roles that your guild considers moderators so I fall back on basic permissions in that case. The permissions you need are \`KICK MEMBERS, MANAGE MEMBERS, BAN MEMBERS, OR MANAGE ROLES\`. Please run \`${prefix}report\` if you are seeing this in error. If you would like to provide me with roles, your guild/server owner needs to run the command \`${prefix}addmodrole [ping roles or use role IDs here]\`.` });
+                }
+                for (const ID of modPerms) {
+                    if (!message.member.permissions.has(ID)) {
+                        console.log(value)
+                        console.log(modPerms)
+                        value++
+                    }
+                    if (value == modPerms.length) {
+                        message.react('❌');
+                        message.reply({ content: `This is a command only moderators can use. You do not have the required permissions. The roles you need are \`KICK MEMBERS, MANAGE MEMBERS, BAN MEMBERS, OR MANAGE ROLES\`. Please run \`${prefix}report\` if you are seeing this in error.` });
+                        return;
+                    }
                 }
             }
         }
 
-        if (command.modOnly === 1) {
-            for (const ID of modRoles) {
-                if (!message.member.roles.cache.has(ID)) {
+        // makes sure the suggestions system is enabled
+        if (command.suggest === 1) {
+            const s = await connection.query(`SELECT suggestionsEnabled FROM guildConfig WHERE guildId = ?;`, [message.guild.id]);
+            const enabled = s[0][0].suggestionsEnabled;
+            if (enabled === 0) {
+                message.react('❌');
+                message.reply({ content: `The suggestions system has not been enabled yet. Your guild/server owner needs to run \`${prefix}enable-suggestions\` to enable the system. If you are seeing this in error please report this!` });
+                return;
+            }
+        }
+
+        // makes sure the challenge system is enabled
+        if (command.challenge === 1) {
+            const c = await connection.query(`SELECT challengesEnabled FROM guildConfig WHERE guildId = ?;`, [message.guild.id]);
+            const enabled = c[0][0].challengesEnabled;
+            if (enabled === 0) {
+                message.react('❌');
+                message.reply({ content: `The challenges system has not been enabled yet. Your guild/server owner needs to run \`${prefix}enable-challenges [ping or use role ID here]\` to enable the system and add the specific roles that will moderate the challenges to the system. If you are seeing this in error, please report this!`});
+                return;
+            }
+        }
+
+        // makes sure the user running the command is a challenge moderator.
+        if (command.challengemods === 1) {
+            const ch = await connection.query(`SELECT * FROM chModIds WHERE guildId = ?;`, [message.guild.id]);
+            const chllmod = ch[0][0].chModIds;
+            if (chllmod === 0 || chllmod === undefined) return message.reply(`There are no challenge moderator roles in the challenge database. Your guild/server owner needs to run \`${prefix}acmr [ping or use role ID here]\` to add the roles to the system. Please run \`${prefix}report [issue]\` if you are seeing this in error.`);
+            for (const id of chllmod) {
+                if (!message.member.roles.cache.has(id)) {
                     value++
                 }
-
-                if (value == modRoles.length) {
+                if (value == chllmod.length) {
                     message.react('❌');
-                    message.reply({ content: `This is a command only moderators can use. You do not have the required permissions. Moderators have the \`@Moderator\` role or \`@&Junior Mod\` roles. Please run \`${config.prefix}report [issue]\` if you are seeing this in error.` });
+                    message.reply({ content: `This is a command only challenge moderators can use. you do not have the required permissions. challenge moderators have the <@&${chllmod[1]}> role. Please run \`${prefix}report [issue]\` if you are seeing this in error.` });
                     return;
                 }
             }
         }
 
-        const chllMod = ['839863262026924083', '718253309101867008'];
-        if (command.challengeMods === 1) {
-            for (const ID of chllMod) {
-                if (!message.member.roles.cache.has(ID)) {
-                    value++
-                }
-                if (value == chllMod.length) {
-                    message.react('❌');
-                    message.reply({ content: `This is a command only challenge moderators can use. You do not have the required permissions. Challenge moderators have the <@&${chllMod[1]}> role. Please run \`${config.prefix}report [issue]\` if you are seeing this in error.` });
-                    return;
-                }
-            }
-        }
-
-        const partsResults = await connection.query(
-            `SELECT * FROM Challenges WHERE guildId = ?;`,
+        const partsresults = await connection.query(
+            `SELECT * FROM Challenges WHERE guildid = ?;`,
             [message.guild.id]
         );
-        if(command.partsOnly === 1) {
-            for(const ID of partsResults.player) {
-                if(message.member.id == ID) {
+        if(command.partsonly === 1) {
+            for(const id of partsresults.player) {
+                if(message.member.id == id) {
                     value++
                 }
-                if(value == partsResults.player.length) {
+                if(value == partsresults.player.length) {
                     message.react('❌');
-                    message.reply({ content: `This is a command only challenge participants can use. You do not have the required role. Participants have the \`Participants\` role. If there is an issue, please report this to the Challenge Moderators.`})
+                    message.reply({ content: `This is a command only challenge participants can use. you do not have the required role. participants have the \`participants\` role. if there is an issue, please report this to the challenge moderators.`})
                 }
             }
         }
+
 
         // command cooldowns
         if (!cooldowns.has(command.name)) {
@@ -137,7 +219,7 @@ module.exports = {
                         .setURL('https://dudethatserin.com')
                 )
             const embed = {
-                color: ee.red,
+                color: 0xFF0000,
                 title: 'Oh no! An _error_ has appeared!',
                 description: `**Contact Bot Owner:** <@${me.id}>`,
                 fields: [
@@ -149,7 +231,7 @@ module.exports = {
                         value: `\`${error.message}\``
                     }, {
                         name: '**Ways to Report:**',
-                        value: `Run the \`${config.prefix}report\` command, Message Erin on Discord, or use one of the links below.\n\nPlease include all of the information in this embed (message) as well as any additional information you can think to provide. Screenshots are also VERY helpful. Thank you!`
+                        value: `Run the \`${prefix}report\` command, Message Erin on Discord, or use one of the links below.\n\nPlease include all of the information in this embed (message) as well as any additional information you can think to provide. Screenshots are also VERY helpful. Thank you!`
                     }
                 ],
                 timestamp: new Date(),

@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}manual-add-user`,
     example: `${config.prefix}manual-add-user 839863262026924083`,
     challengeMods: 1,
+    challenge: 1,
     async execute(message, args, client) {
         const g = message.guild.id;
         const mmbr = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || client.users.cache.get(args[0]) || await client.users.fetch(args[0]).catch(() => { });

@@ -9,6 +9,7 @@ module.exports = {
     usage: `${config.prefix}start-challenge [announcements channel ID] [prize 1|prize 2|prize 3]`,
     example: `${config.prefix}start-challenge 841366694948765786 Nitro|Nitro Classic|Special Role`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
         let announcementsChannel = args[0];
         let guild = message.guild.id;

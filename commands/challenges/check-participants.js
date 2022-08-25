@@ -7,6 +7,7 @@ module.exports = {
     aliases: ['cp', 'contestants', 'challenge-users', 'check-users'],
     usage: `${config.prefix}check-participants`,
     challengeMods: 1,
+    challenge: 1,
     async execute (message, args) {
 
                 const result = await connection.query(

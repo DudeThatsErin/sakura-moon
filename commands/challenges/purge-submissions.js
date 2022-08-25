@@ -7,7 +7,7 @@ module.exports = {
     aliases: ['purges', 'psubmissions', 'psubs', 'purgesubs', 'deletesubs', 'delete-subs'],
     usage: `${config.prefix}purge-submissions`,
     example: `${config.prefix}purge-submissions`,
-    ownerOnly: 1,
+    devOnly: 1,
     async execute (message, args) {
 
             connection.query(

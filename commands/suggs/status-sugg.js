@@ -8,6 +8,7 @@ module.exports = {
     description: 'Allows a user to check the current status of their suggestion.',
     usage: `${config.prefix}statussugg messageID`,
     example: `${config.prefix}statussugg 847580954306543616`,
+    suggest: 1,
     async execute(message, args) {
 
         const msgId = args[0];
@@ -36,7 +37,7 @@ module.exports = {
             [msgId],
         );
         const avatar = result4[0][0].Avatar;
-        
+
         const result5 = await connection.query(
             `SELECT LAST_EDITED from Suggs WHERE noSugg = ?`,
             [msgId],
@@ -62,7 +63,7 @@ module.exports = {
         );
         const status = result7[0][0].stat;
 
-        const initial = new Discord.MessageEmbed()
+        const initial = new Discord.EmbedBuilder()
         .setColor(0x771C73)
         .setAuthor({name: name, iconURL: avatar})
         .setDescription(suggestion)

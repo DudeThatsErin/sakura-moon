@@ -7,6 +7,7 @@ module.exports = {
     challengeMods: 1,
     usage: `${config.prefix}unreview [message ID]`,
     example: `${config.prefix}unreview 987456977259821`,
+    challenge: 1,
     async execute(message, args, client) {
 
         let msgId = args[0];
