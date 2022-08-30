@@ -105,7 +105,21 @@ module.exports = {
                     const info = await connection.query('SELECT suggsChId FROM guildConfig WHERE guildId = ?;', [message.guild.id]);
                     const suggChId = info[0][0].suggsChId;
 
-                    const chnnel = await message.guild.channels.cache.find(c => c.id === suggChId);
+                const chnnel = await message.guild.channels.cache.find(c => c.id === suggChId);
+                const botPermissionsIn = message.guild.members.me.permissionsIn(chnnel);
+                if(!botPermissionsIn.has(PermissionsBitField.Flags.SendMessages)) return message.author.send(`I can\'t send messages in that channel. I need to have the \`SEND MESSAGES\` permission for that channel. A mod or guild owner will need to update this. If you are seeing this in error, please run the \`${prefix}report\` command.`);
+
+                const botPerms = [PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory, ]
+                let v = 0;
+                for(const i of botPerms) {
+                    if(!message.guild.members.me.permissionsIn(chnnel).has(i)) {
+                        v++
+                    }
+                    if(v == botPerms.length) {
+                        message.react('❌');
+                        return message.author.send('I do not have the necessary permissions for this channel. I need \`Read Message History, View Channel, and Send Messages.\`');
+                    }
+                }
                     chnnel.messages.fetch(msgId).then(message => {
                         message.delete();
                     });

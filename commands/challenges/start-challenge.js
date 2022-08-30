@@ -17,6 +17,22 @@ module.exports = {
         let prize = [];
         let prizes = args.slice(1).join(' ').split("|");
 
+
+        const botPermissionsIn = message.guild.members.me.permissionsIn(announcementsChannel);
+        if(!botPermissionsIn.has(Discord.PermissionsBitField.Flags.SendMessages)) return message.author.send(`I can\'t send messages in that channel. I need to have the \`SEND MESSAGES\` permission for that channel. A mod or guild owner will need to update this. If you are seeing this in error, please run the \`${prefix}report\` command.`);
+
+        const botPerms = [Discord.PermissionsBitField.Flags.ManageMessages, Discord.PermissionsBitField.Flags.SendMessages, Discord.PermissionsBitField.Flags.ViewChannel, Discord.PermissionsBitField.Flags.ReadMessageHistory, ]
+        let v = 0;
+        for(const i of botPerms) {
+            if(!message.guild.members.me.permissionsIn(announcementsChannel).has(i)) {
+                v++
+            }
+            if(v == botPerms.length) {
+                message.react('❌');
+                return message.author.send('I do not have the necessary permissions for this channel. I need \`Manage Messages, Read Message History, View Channel, and Send Messages.\`');
+            }
+        }
+
             if (!announcementsChannel) {
                 message.reply({content:'You need to include the ID of the channel where you want me to post the Challenge Questions!'});
                 return;

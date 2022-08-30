@@ -162,7 +162,7 @@ module.exports = {
 			//  const buttonPaginator = new ButtonPaginator(interaction, { pages });
 			//  await buttonPaginator.send();
 
-			interaction.editReply({ content: `The commands are listed on our website. Check this link: https://dudethatserin.com/c2ba3760e54c43b384439012e30f15f7?v=bb0f431e8c154f8fb34cde89940ad40c`})
+			interaction.editReply({ content: `The commands are listed on our website. Check this link: https://dudethatserin.com/Sakura-Moon-6de12325b0e641dba63cb2dbc26f88ad`})
 		}
 
 	},

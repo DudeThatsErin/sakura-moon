@@ -19,6 +19,21 @@ module.exports = {
         }
         const chnnel = client.channels.cache.find(channel => channel.id === bot.reportsChId);
 
+        const botPermissionsIn = message.guild.members.me.permissionsIn(chnnel);
+        if(!botPermissionsIn.has(Discord.PermissionsBitField.Flags.SendMessages)) return message.author.send(`I can\'t send messages in that channel. I need to have the \`SEND MESSAGES\` permission for that channel. A mod or guild owner will need to update this. If you are seeing this in error, please run the \`${prefix}report\` command.`);
+
+        const botPerms = [Discord.PermissionsBitField.Flags.SendMessages, Discord.PermissionsBitField.Flags.ViewChannel, Discord.PermissionsBitField.Flags.ReadMessageHistory, ]
+        let v = 0;
+        for(const i of botPerms) {
+            if(!message.guild.members.me.permissionsIn(chnnel).has(i)) {
+                v++
+            }
+            if(v == botPerms.length) {
+                message.react('❌');
+                return message.author.send('I do not have the necessary permissions for this channel. I need \`Read Message History, View Channel, and Send Messages.\`');
+            }
+        }
+
         let msgId = args[0];
         if (msgId < 0) {
             message.react('❓');
